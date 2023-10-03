@@ -1,0 +1,19 @@
+{
+  "configurations": [
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Front Next.js ",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/front/src",
+    },
+    {
+      "type": "python",
+      "request": "launch",
+      "name": "Back FastAPI",
+      "program": "${workspaceFolder}/back/main.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+    }
+  ]
+}
