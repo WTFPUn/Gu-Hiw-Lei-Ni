@@ -1,19 +1,25 @@
-install-back-dependencies:
-	cd back && yarn install
+# if window use where python3 else use which python3
+PYTHON = $(shell which python3)
+ROOT = $(shell pwd)
+ENV_PATH = venv/bin/activate
+REQ_PATH = $(ROOT)/requirement/requirement.txt
 
-install-front-dependencies:
-	python3 -m venv .venv
-	. .venv/bin/activate && cd front && pip install -r requirements.txt
 
-init:
-	make install-back-dependencies
-	make install-front-dependencies
 
-dev-front:
-	cd back
-	yarn dev
+init-back: 
+	$(PYTHON) -m venv venv
+	. $(ENV_PATH)
+	pip install pip-tools
+	pip install -r $(REQ_PATH)
 
-dev-back:
-	cd front
-	python3 main.py
+sync-back:
+	. $(ENV_PATH)
+	pip-compile --output-file=requirement/requirement.txt requirement/requirement.in
+	pip-sync requirement/requirement.txt
+
+run-back:
+	. $(ENV_PATH)
+	python back/main.py
+	
+
 
