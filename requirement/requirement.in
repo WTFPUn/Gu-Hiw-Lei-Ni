@@ -1,3 +1,5 @@
 starlette
 uvicorn[standard]
 python-dotenv
+pydantic
+pymongo[srv]
