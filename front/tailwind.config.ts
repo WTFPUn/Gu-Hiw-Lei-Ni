@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss';
+import defaultTheme from 'tailwindcss/defaultTheme';
 
 const config: Config = {
   content: [
@@ -17,6 +18,9 @@ const config: Config = {
         primary: '#125B50',
         secondary: '#F8B401',
         'off-yellow': '#FAF5E4',
+      },
+      fontFamily: {
+        sans: ['"Poppins"', ...defaultTheme.fontFamily.sans],
       },
     },
   },
