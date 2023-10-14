@@ -1,12 +1,13 @@
-from starlette.applications import Starlette
-from starlette.responses import JSONResponse
-from starlette.routing import Route
 import asyncio
-from uvicorn import Config, Server
 import dotenv
 import os
-import sys
+
+from starlette.applications import Starlette
+from starlette.responses import JSONResponse
+from uvicorn import Config, Server
 from logging import Logger
+from handle_req.auth import Auth
+from pymongo import MongoClient
 
 dotenv.load_dotenv()
 HOST = os.getenv("HOST")
