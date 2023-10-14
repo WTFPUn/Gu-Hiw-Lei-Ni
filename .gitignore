@@ -2,3 +2,7 @@
 
 # ignore python virtualenv folder
 venv
+
+# ignore python bytecode
+*.pyc
+__pycache__/
