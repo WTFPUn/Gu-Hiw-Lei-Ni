@@ -7,8 +7,7 @@ from logging import Logger
 import logging
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
-FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
-logging.basicConfig(format=FORMAT, level=logging.NOTSET)
+logging.basicConfig(level=logging.NOTSET)
 
 # set logger format
 logger: Logger = Logger(__name__)
