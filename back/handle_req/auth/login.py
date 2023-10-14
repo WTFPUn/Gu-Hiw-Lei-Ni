@@ -4,7 +4,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 from logging import Logger
 from pydantic import BaseModel, TypeAdapter, ValidationError
-
+import bcrypt
 
 class LoginRequestBody(BaseModel):
     username: str

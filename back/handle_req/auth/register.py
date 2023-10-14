@@ -3,6 +3,7 @@ from handle_req import HandleRequest, methods
 from starlette.requests import Request
 from starlette.responses import Response
 from pydantic import BaseModel, TypeAdapter, ValidationError
+import bcrypt
 
 
 class RegisterRequestBody(BaseModel):
