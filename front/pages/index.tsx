@@ -1,8 +1,7 @@
 import Image from 'next/image';
 import { Inter } from 'next/font/google';
 import React from 'react';
-
-const inter = Inter({ subsets: ['latin'] });
+import Layout from '@/components/common/Layout';
 
 class TestCls extends React.Component<'', ''> {
   render() {
@@ -15,9 +14,5 @@ class TestCls extends React.Component<'', ''> {
 }
 
 export default function Home() {
-  return (
-    <main
-      className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
-    ></main>
-  );
+  return <Layout>test</Layout>;
 }
