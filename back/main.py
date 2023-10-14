@@ -1,37 +1,43 @@
 from starlette.applications import Starlette
+from starlette.responses import JSONResponse
+from starlette.routing import Route
 import asyncio
 from uvicorn import Config, Server
 import dotenv
 import os
+import sys
 from logging import Logger
 
 dotenv.load_dotenv()
 HOST = os.getenv("HOST")
-PORT = os.getenv("PORT")
-
+PORT = int(os.getenv("PORT"))
 logging: Logger = Logger(__name__)
-# set loggiing format
-logging
+logging.setLevel(0)
 
-logging.warning(f"eoiei")
-logging.info(f"PORT: {PORT}")
+
+async def homepage(request):
+    return JSONResponse({"hello": "world"})
+
+
+async def kuy(request):
+    logging.info("kuy")
+    return JSONResponse({"hello": "kuy"})
 
 
 async def main() -> None:
-    # app = Starlette()
+    app = Starlette()
 
-    # server: Server = Server(
-    #     Config(
-    #         app=app,
-    #         port=PORT,
-    #     )
-    # )
-    # logging.info(f"Starting server on {str(HOST)}:{str(PORT)}")
+    app.add_route("/kuy", kuy, methods=["GET"])
 
-    # await server.serve()
-    logging.info("Starting server")
+    server: Server = Server(
+        Config(
+            app=app,
+            port=PORT,
+        )
+    )
+    logging.info(f"Starting server on {str(HOST)}:{str(PORT)}")
+    await server.serve()
 
 
-# if __name__ == "__main__":
-#     asyncio.run(main())
-#     # pass
+if __name__ == "__main__":
+    asyncio.run(main())
