@@ -13,4 +13,13 @@ class LoginRequestBody(BaseModel):
 
 class Login(HandleRequest[LoginRequestBody, None]):
     async def _handle(self) -> Response:
+        collection = self.mongo_client["GuHiw"]["User"]
+        if(collection.find_one({"username": self.body.username})):
+            user = collection.find_one({"username": self.body.username})
+            if(bcrypt.checkpw(self.body.password.encode("ascii"), user["password"])):
+                return Response("Logged in")
+            else:
+                return Response("Username or password is incorrect", status_code=401)
+        else:
+            return Response("Username or password is incorrect", status_code=401)
         pass
