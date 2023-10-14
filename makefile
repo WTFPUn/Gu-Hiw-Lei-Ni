@@ -1,6 +1,7 @@
 # if window use where python3 else use which python3
 PYTHON = $(shell which python3)
-ROOT = $(shell pwd)
+PYTHONPATH = back
+ROOT = $(shell pwd) 
 ENV_PATH = venv/bin/activate
 REQ_PATH = $(ROOT)/requirement/requirement.txt
 
@@ -19,7 +20,6 @@ sync-back:
 
 run-back:
 	. $(ENV_PATH)
-	python back/main.py
+	python3 $(PYTHONPATH)/main.py
 	
-
 
