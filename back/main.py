@@ -12,24 +12,24 @@ from pymongo import MongoClient
 dotenv.load_dotenv()
 HOST = os.getenv("HOST")
 PORT = int(os.getenv("PORT"))
+MONGO_URL = os.getenv("MONGO_URL")
 logging: Logger = Logger(__name__)
 logging.setLevel(0)
 
 
-async def homepage(request):
-    return JSONResponse({"hello": "world"})
-
-
-async def kuy(request):
-    logging.info("kuy")
-    return JSONResponse({"hello": "kuy"})
-
-
 async def main() -> None:
-    app = Starlette()
+    # init app
+    app = Starlette(routes=[])
 
-    app.add_route("/kuy", kuy, methods=["GET"])
+    # init mongo client
+    mongo_client: MongoClient = MongoClient(MONGO_URL)
 
+    # Add routes
+    auth = Auth(mongo_client)
+    Auth.load_mongo_client(auth, mongo_client)
+    app.routes.extend(auth.route())
+
+    # init server
     server: Server = Server(
         Config(
             app=app,
