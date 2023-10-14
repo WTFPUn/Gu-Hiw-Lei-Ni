@@ -1,9 +1,9 @@
-from .login import Login
-from .register import Register
+from .login import Login, LoginRequestBody
+from .register import Register, RegisterRequestBody
 from handle_req.endpoint_collector import EndpointCollector
 
-login: Login = Login(["POST"])
-register: Register = Register(["POST"])
+login: Login = Login(["POST"], LoginRequestBody)
+register: Register = Register(["POST"], RegisterRequestBody)
 
 
 class Auth(EndpointCollector):

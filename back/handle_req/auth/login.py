@@ -6,11 +6,11 @@ from logging import Logger
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
 
-logger: Logger = Logger(__name__)
-logger.setLevel(0)
+class LoginRequestBody(BaseModel):
+    username: str
+    password: str
 
 
-class Login(HandleRequest):
-    async def handle(self, request: Request) -> Response:
-        logger.info("Login")
-        return Response("Login")
+class Login(HandleRequest[LoginRequestBody, None]):
+    async def _handle(self) -> Response:
+        pass
