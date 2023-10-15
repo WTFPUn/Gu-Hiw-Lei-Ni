@@ -9,19 +9,25 @@ import bcrypt
 class RegisterRequestBody(BaseModel):
     user_name: str
     password: str
-    email: str
+    confirm_password: str
+    first_name: str
+    last_name: str
+    # image is a base64 encoded string
+    # image: str
 
 
 class Register(HandleRequest[RegisterRequestBody, None]):
     async def _handle(self) -> Response:
-        self.logger.debug(self.body)        
-        collection = self.mongo_client["GuHiw"]["User"]     
+        self.logger.debug(self.body)
+        collection = self.mongo_client["GuHiw"]["User"]
         # Gen Salt + Hash Password
-        hashed_password = bcrypt.hashpw(self.body.password.encode("ascii"), bcrypt.gensalt())
-        # Hash Password
-        # Check if username or email already exists
-        if(collection.find_one({"email": self.body.email})):
+        hashed_password = bcrypt.hashpw(
+            self.body.password.encode("ascii"), bcrypt.gensalt()
+        )
+        if self.body.password != self.body.confirm_password:
             self.logger.info("400 Error")
+            return Response("Passwords do not match", status_code=400)
+
         if collection.find_one({"user_name": self.body.user_name}):
             self.logger.info("400 Error")
             return Response("Username already exists", status_code=400)
@@ -34,4 +40,5 @@ class Register(HandleRequest[RegisterRequestBody, None]):
         except Exception as e:
             self.logger.error(e)
             return Response("error", status_code=500)
+        # WIP: return token
         return Response("register")
