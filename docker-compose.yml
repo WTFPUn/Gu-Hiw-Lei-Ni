@@ -15,5 +15,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3001:3000"
-    env_file:
-      - .env
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - PORT=3000
+      - HOST="127.0.0.1"

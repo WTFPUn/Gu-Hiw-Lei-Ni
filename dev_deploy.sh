@@ -72,7 +72,7 @@ fi
 
 echo "--Running the docker containers"
 
-docker compose --env-file ./.env.dev -f docker-compose.yml up -d
+docker compose --env-file ./.env -f docker-compose.yml up -d
 
 # check if docker compose successfully started
 if [ $? -eq 0 ]
@@ -80,5 +80,5 @@ then
     echo "Container successfully started."
 else
     echo "Docker compose failed to start."
-    docker compose --env-file ./.env.dev -f docker-compose.yml down
+    docker compose --env-file ./.env -f docker-compose.yml down
 fi
