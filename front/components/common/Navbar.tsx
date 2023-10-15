@@ -1,11 +1,5 @@
-import { Fragment } from 'react';
-import { Disclosure, Menu, Transition } from '@headlessui/react';
-import {
-  Bars3Icon,
-  BellIcon,
-  ChevronDownIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
+import { Disclosure, Transition } from '@headlessui/react';
+import { Bars3BottomLeftIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import React from 'react';
 import Button from './Button';
@@ -18,7 +12,7 @@ type NavigationItem = {
 };
 
 const navigation: NavigationItem[] = [
-  { name: 'Profile', href: '/', active: true },
+  { name: 'Profile', href: '/2', active: true },
   { name: 'Matchmaking', href: '/', active: false },
 ];
 
@@ -37,17 +31,19 @@ class Navbar extends React.Component {
   render() {
     const navigationItem = navigation.map(item => {
       return (
-        <Disclosure.Button
-          key={item.name}
-          as="a"
-          href={item.href}
-          className={classNames(
-            'block rounded-r-2xl px-3 py-4 text-base font-medium max-w-[95%]',
-            item?.active ? 'bg-primary text-white' : '',
-          )}
-        >
-          {item.name}
-        </Disclosure.Button>
+        <Link href={item.href} className="w-full">
+          <Disclosure.Button
+            key={item.name}
+            as="a"
+            href="#"
+            className={classNames(
+              'block rounded-r-2xl px-3 py-4 text-base font-medium max-w-[95%]',
+              item?.active ? 'bg-primary text-white' : '',
+            )}
+          >
+            {item.name}
+          </Disclosure.Button>
+        </Link>
       );
     });
 
@@ -84,7 +80,7 @@ class Navbar extends React.Component {
                       className="relative cursor-pointer inline-flex items-center justify-center rounded-md p-2 text-black z-100"
                     >
                       {
-                        <Bars3Icon
+                        <Bars3BottomLeftIcon
                           className="block h-6 w-6"
                           aria-hidden="true"
                         />
@@ -107,7 +103,7 @@ class Navbar extends React.Component {
                       <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md p-2 text-black ">
                         <span className="absolute -inset-0.5" />
                         <span className="sr-only">Open main menu</span>
-                        <Bars3Icon className="block h-6 w-6" />
+                        <Bars3BottomLeftIcon className="block h-6 w-6" />
                       </Disclosure.Button>
                     </div>
                     <div className="absolute inset-y-0 right-0 flex items-center pr-2 ">
