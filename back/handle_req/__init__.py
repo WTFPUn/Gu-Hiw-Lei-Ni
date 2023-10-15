@@ -34,7 +34,7 @@ class HandleRequest(Generic[GenericRequestBody, GenericRequestQParam]):
         self.RequesstQParam = RequestQParam
 
     async def handle(self, request: Request) -> Response:
-        if(self.mongo_client == None):
+        if self.mongo_client == None:
             self.logger.error("Mongo Client not loaded")
             return Response("Mongo couldn't be loaded", status_code=500)
         if request.method not in self.method:

@@ -31,4 +31,3 @@ class Login(HandleRequest[LoginRequestBody, None]):
                 return Response("Username or password is incorrect", status_code=401)
         else:
             return Response("Username or password is incorrect", status_code=401)
-        pass
