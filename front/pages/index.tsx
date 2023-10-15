@@ -1,18 +1,28 @@
-import Image from 'next/image';
-import { Inter } from 'next/font/google';
+import Button from '@/components/common/Button';
 import React from 'react';
-import Layout from '@/components/common/Layout';
+import { withRouter } from 'next/router';
+import { WithRouterProps } from 'next/dist/client/with-router';
 
-class TestCls extends React.Component<'', ''> {
+class Landing extends React.Component<WithRouterProps, {}> {
   render() {
+    const router = this.props.router;
+
     return (
-      <div>
-        <h1>Test</h1>
-      </div>
+      <main className="h-screen flex flex-col justify-center align-middle content-center items-center gap-16">
+        <div className="bg-red-500 w-32 h-32 rounded-full pt-32">
+          {/* Logo */}
+        </div>
+        <div className="flex flex-col justify-center text-center gap-2">
+          <h1 className="font-semibold text-2xl"> Welcome to Gu-Hiw</h1>
+          <p className="font-xl text-gray">Find some friends to eat with you</p>
+        </div>
+        <div className="absolute pb-8 bottom-5 flex flex-col w-[85%] gap-4">
+          <Button text="Login" primary onClick={() => router.push('/login')} />
+          <Button text="Register" onClick={() => router.push('/register')} />
+        </div>
+      </main>
     );
   }
 }
 
-export default function Home() {
-  return <Layout>test</Layout>;
-}
+export default withRouter(Landing);

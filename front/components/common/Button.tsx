@@ -22,7 +22,7 @@ class Button extends React.Component<ButtonProps, {}> {
     return (
       <button
         className={`
-      rounded-md px-4 py-3  
+      rounded-xl px-4 py-4  
       ${
         this.props.primary
           ? 'bg-primary text-white'
