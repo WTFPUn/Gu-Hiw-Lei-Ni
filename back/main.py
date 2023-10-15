@@ -18,13 +18,15 @@ MONGO_URL = os.getenv("MONGO_URL")
 logging: Logger = Logger(__name__)
 logging.setLevel(0)
 
-middleware = [
-    Middleware(CORSMiddleware, allow_origins=['*'],allow_methods=['*'],allow_headers=['*'],allow_credentials=True)
-]
 
 async def main() -> None:
     # init app
-    app = Starlette(routes=[],middleware=middleware)
+
+    #
+    app = Starlette()
+    app.add_middleware(
+        CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
+    )
 
     # init mongo client
     mongo_client: MongoClient = MongoClient(MONGO_URL)
@@ -33,7 +35,6 @@ async def main() -> None:
     auth = Auth(mongo_client)
     Auth.load_mongo_client(auth, mongo_client)
     app.routes.extend(auth.route())
-    app.add_middleware(middleware)
     # init server
     server: Server = Server(
         Config(
