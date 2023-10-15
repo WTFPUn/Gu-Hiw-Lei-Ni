@@ -32,15 +32,15 @@ echo "Checkout to $checkout"
         exit 1
     fi
 
-echo "--Check if .env.dev file exists"
+echo "--Check if .env file exists"
 
 if [ ! -f .env.dev ]
 then
-    echo "File .env.dev does not exist."
-    echo "Creating .env.dev file using env.example file."
-    cp env.example .env.dev
+    echo "File .env does not exist."
+    echo "Creating .env file using env.example file."
+    cp env.example .env
 else
-    echo "File .env.dev found."
+    echo "File .env found."
 fi
 
 function build_image() {
