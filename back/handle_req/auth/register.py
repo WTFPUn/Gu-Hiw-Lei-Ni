@@ -27,7 +27,7 @@ class Register(HandleRequest[RegisterRequestBody, None]):
         if self.body.password != self.body.confirm_password:
             self.logger.info("400 Error")
             return Response("Passwords do not match", status_code=400)
-
+        del self.body.confirm_password
         if collection.find_one({"user_name": self.body.user_name}):
             self.logger.info("400 Error")
             return Response("Username already exists", status_code=400)
