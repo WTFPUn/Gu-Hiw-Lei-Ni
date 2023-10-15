@@ -19,6 +19,7 @@ const config: Config = {
         secondary: '#F8B401',
         'off-yellow': '#FAF5E4',
         'light-red': '#FF6363',
+        gray: '#878787',
       },
       fontFamily: {
         sans: ['"Poppins"', ...defaultTheme.fontFamily.sans],
