@@ -2,7 +2,7 @@ import React, { HTMLAttributes } from 'react';
 
 type ButtonProps = {
   text: string;
-  onClick: () => void;
+  onClick?: () => void;
   primary?: boolean;
   danger?: boolean;
 };
