@@ -3,6 +3,9 @@ import { Bars3BottomLeftIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import React from 'react';
 import Button from './Button';
+import { withRouter } from 'next/router';
+import { WithRouterProps } from '@/utils/router';
+import { WithAuthProps, logout, withAuth } from '@/utils/auth';
 
 type NavigationItem = {
   name: string;
@@ -12,8 +15,8 @@ type NavigationItem = {
 };
 
 const navigation: NavigationItem[] = [
-  { name: 'Profile', href: '/2', active: true },
-  { name: 'Matchmaking', href: '/', active: false },
+  { name: 'Profile', href: '/profile' },
+  { name: 'Matchmaking', href: '/matchmaking' },
 ];
 
 function classNames(...classes: string[]) {
@@ -27,9 +30,10 @@ function classNames(...classes: string[]) {
  * @todo make this filter base on actual user role not just hardcoded
  *
  */
-class Navbar extends React.Component {
+class Navbar extends React.Component<WithAuthProps & WithRouterProps> {
   render() {
     const navigationItem = navigation.map(item => {
+      item.active = this.props.router.pathname.includes(item.href);
       return (
         <Link href={item.href} className="w-full">
           <Disclosure.Button
@@ -89,7 +93,16 @@ class Navbar extends React.Component {
                   </div>
                   <div className="flex flex-col ">{navigationItem}</div>
                   <div className="flex flex-col h-[75%] px-4 justify-end">
-                    <Button text="Log out" onClick={() => {}} danger />
+                    {this.props.auth_status && (
+                      <Button
+                        text="Log out"
+                        onClick={() => {
+                          logout();
+                          this.props.router.push('/');
+                        }}
+                        danger
+                      />
+                    )}
                   </div>
                 </div>
               </Disclosure.Panel>
@@ -120,4 +133,4 @@ class Navbar extends React.Component {
   }
 }
 
-export default Navbar;
+export default withAuth(withRouter(Navbar));
