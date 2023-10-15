@@ -7,17 +7,15 @@ from pydantic import BaseModel, TypeAdapter, ValidationError
 import bcrypt
 
 class LoginRequestBody(BaseModel):
-    username: str
+    user_name: str
     password: str
 
 
 class Login(HandleRequest[LoginRequestBody, None]):
     async def _handle(self) -> Response:
         collection = self.mongo_client["GuHiw"]["User"]
-        if(collection.find_one({"username": self.body.username})):
-            user = collection.find_one({"username": self.body.username})
-            if(bcrypt.checkpw(self.body.password.encode("ascii"), user["password"])):
-                return Response("Logged in")
+        if collection.find_one({"user_name": self.body.user_name}):
+            user = collection.find_one({"user_name": self.body.user_name})
             else:
                 return Response("Username or password is incorrect", status_code=401)
         else:

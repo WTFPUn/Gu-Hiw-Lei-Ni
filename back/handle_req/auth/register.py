@@ -7,7 +7,7 @@ import bcrypt
 
 
 class RegisterRequestBody(BaseModel):
-    username: str
+    user_name: str
     password: str
     email: str
 
@@ -22,13 +22,14 @@ class Register(HandleRequest[RegisterRequestBody, None]):
         # Check if username or email already exists
         if(collection.find_one({"email": self.body.email})):
             self.logger.info("400 Error")
-            return Response("Email already exists", status_code=400)
-        if(collection.find_one({"username": self.body.username})):
+        if collection.find_one({"user_name": self.body.user_name}):
             self.logger.info("400 Error")
             return Response("Username already exists", status_code=400)
+
         hashedBody = self.body.model_dump()
         hashedBody["password"] = hashed_password
-        try:            
+
+        try:
             collection.insert_one(hashedBody)
         except Exception as e:
             self.logger.error(e)
