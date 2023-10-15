@@ -4,3 +4,4 @@ python-dotenv
 pydantic
 pymongo[srv]
 bcrypt
+pyjwt

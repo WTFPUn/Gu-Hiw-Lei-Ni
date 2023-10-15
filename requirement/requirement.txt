@@ -10,6 +10,8 @@ anyio==4.0.0
     # via
     #   starlette
     #   watchfiles
+bcrypt==4.0.1
+    # via -r requirement/requirement.in
 click==8.1.7
     # via uvicorn
 dnspython==2.4.2
@@ -26,6 +28,8 @@ pydantic==2.4.2
     # via -r requirement/requirement.in
 pydantic-core==2.10.1
     # via pydantic
+pyjwt==2.8.0
+    # via -r requirement/requirement.in
 pymongo[srv]==4.5.0
     # via -r requirement/requirement.in
 python-dotenv==1.0.0
