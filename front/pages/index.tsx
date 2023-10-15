@@ -16,7 +16,7 @@ class Landing extends React.Component<WithRouterProps, {}> {
           <h1 className="font-semibold text-2xl"> Welcome to Gu-Hiw</h1>
           <p className="font-xl text-gray">Find some friends to eat with you</p>
         </div>
-        <div className="absolute pb-8 bottom-5 flex flex-col w-[85%] gap-4">
+        <div className="absolute pb-8 bottom-5 flex flex-col w-3/4 gap-4">
           <Button text="Login" primary onClick={() => router.push('/login')} />
           <Button text="Register" onClick={() => router.push('/register')} />
         </div>
