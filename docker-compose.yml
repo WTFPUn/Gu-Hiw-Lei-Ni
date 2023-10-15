@@ -6,9 +6,11 @@ services:
       context: .
       dockerfile: back/Dockerfile
     ports:
-      - "8001:8000"
+      - "8005:8000"
     env_file:
       - .env
+    environment:
+      - PORT=8000
   frontend:
     build:
       context: front
