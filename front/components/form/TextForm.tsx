@@ -7,6 +7,7 @@ type TextFormProps = {
   width?: string;
   required?: boolean;
   password?: boolean;
+  name?: string;
 };
 
 type TextFormState = {
@@ -21,6 +22,9 @@ type TextFormState = {
  * @param {(ref: TextForm) => void} ref - Reference to the component
  * @param {string} width - Width of the text form, unit in rem Ex. w-[1.5rem]
  * @param {string} height - Height of the text form, unit in rem Ex. h-[1.5rem]
+ * @param {boolean} required - Whether the text form is required or not
+ * @param {boolean} password - Whether the text form is password or not
+ * @param {string} name - Name of the text form
  *
  */
 
@@ -56,6 +60,7 @@ class TextForm extends React.Component<TextFormProps, TextFormState> {
         required={this.props.required ? this.props.required : false}
         placeholder={this.props.placeholder ? this.props.placeholder : ''}
         value={this.state.text}
+        name={this.props.name}
         onChange={e => {
           this.setState((state: TextFormState) => {
             const newState: TextFormState = {

@@ -2,7 +2,7 @@ import React, { HTMLAttributes } from 'react';
 
 type ButtonProps = {
   text: string;
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent<HTMLElement>) => void;
   primary?: boolean;
   danger?: boolean;
 };
@@ -11,7 +11,7 @@ type ButtonProps = {
  * Button component
  *
  * @param {string} text - Text to display on the button
- * @param {() => void} onClick - Function to call when the button is clicked
+ * @param {(e) => void} onClick - Function to call when the button is clicked
  * @param {string} fontSize - Font size of the button, unit in rem Ex. 1.5rem
  * @param {boolean} primary - Whether the button is primary or not
  * @param {boolean} danger - Whether the button is danger or not
