@@ -4,11 +4,6 @@ import TextForm from '@/components/form/TextForm';
 
 export default class Matchmaking extends React.Component<{}, {}> {
   render() {
-    return (
-      <Layout>
-        <TextForm text="Test" placeholder="Test" />
-        test
-      </Layout>
-    );
+    return <Layout>Matchmaking</Layout>;
   }
 }

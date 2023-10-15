@@ -4,11 +4,6 @@ import TextForm from '@/components/form/TextForm';
 
 export default class Profile extends React.Component<{}, {}> {
   render() {
-    return (
-      <Layout>
-        <TextForm text="Test" placeholder="Test" />
-        Profile
-      </Layout>
-    );
+    return <Layout>Profile</Layout>;
   }
 }
