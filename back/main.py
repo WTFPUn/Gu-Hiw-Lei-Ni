@@ -39,6 +39,7 @@ async def main() -> None:
     server: Server = Server(
         Config(
             app=app,
+            host=HOST,
             port=PORT,
         )
     )
