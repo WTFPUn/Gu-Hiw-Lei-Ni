@@ -1,5 +1,5 @@
 # Build stage for preparing Python environment
-FROM python:3.10-alpine as py-prepare
+FROM python:3.10-slim as py-prepare
 WORKDIR /app
 
 # Copy requirements file to container
@@ -11,7 +11,7 @@ RUN pip install -r ./requirement/requirement.txt --no-cache-dir
 
 
 
-FROM python:3.10-alpine as py-run
+FROM python:3.10-slim as py-run
 
 # Set the working directory to /app
 WORKDIR /app
@@ -29,5 +29,5 @@ ENV PORT 8000
 # Expose port 8000 for the container
 EXPOSE 8000
 
-# Start the container with the command "python ./main.py"
-CMD ["python", "./main.py"]
+# Start the container with uvicorn so docker can listen on port 8000 host 0.0.0.0
+CMD [ "python3","-m","uvicorn","main:main","--factory","--host","0.0.0.0" ]
