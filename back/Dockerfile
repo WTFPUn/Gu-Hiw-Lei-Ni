@@ -23,11 +23,11 @@ COPY back /app/
 COPY --from=py-prepare /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
 
 # Set environment variables for the container
-ENV HOST "0.0.0.0"
+ENV HOST 0.0.0.0
 ENV PORT 8000
 
 # Expose port 8000 for the container
 EXPOSE 8000
 
-# Start the container with uvicorn so docker can listen on port 8000 host 0.0.0.0
-CMD [ "python3","-m","uvicorn","main:main","--factory","--host","0.0.0.0" ]
+# Start the container with the command "python ./main.py"
+CMD ["python3", "./main.py"]
