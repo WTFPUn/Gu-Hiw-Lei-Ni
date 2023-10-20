@@ -17,7 +17,7 @@ GenericRequestBody = TypeVar("GenericRequestBody", bound=BaseModel)
 GenericRequestQParam = TypeVar("GenericRequestQParam", bound=BaseModel)
 
 
-class HandleRequest(Generic[GenericRequestBody, GenericRequestQParam]):
+class HandleRequest(Generic[GenericRequestBody, GenericRequestQParam], ABC):
     body: GenericRequestBody
     query: GenericRequestQParam
 
@@ -52,6 +52,7 @@ class HandleRequest(Generic[GenericRequestBody, GenericRequestQParam]):
             self.logger.error(e)
             return Response("Bad Request", status_code=400)
 
+    @abstractmethod
     async def _handle(self) -> Response:
         pass
 
