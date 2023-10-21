@@ -7,7 +7,6 @@ import React from 'react';
  *  Main layout component
  *
  * @param {React.ReactNode} children - The content to display inside the layout
- * @todo fetch { Session } session - User session object from the server to pass to the navbar
  */
 
 class Layout extends React.Component<{ children: React.ReactNode }> {
@@ -15,9 +14,7 @@ class Layout extends React.Component<{ children: React.ReactNode }> {
     return (
       <>
         <Navbar />
-        <main className="min-h-screen pt-16 bg-[#FAF5E4]">
-          {this.props.children}
-        </main>
+        <main className="min-h-screen bg-[#FAF5E4]">{this.props.children}</main>
       </>
     );
   }

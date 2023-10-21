@@ -6,6 +6,7 @@ import Button from './Button';
 import { withRouter } from 'next/router';
 import { WithRouterProps } from '@/utils/router';
 import { WithAuthProps, logout, withAuth } from '@/utils/auth';
+import { classNames } from '@/utils/style';
 
 type NavigationItem = {
   name: string;
@@ -15,19 +16,15 @@ type NavigationItem = {
 };
 
 const navigation: NavigationItem[] = [
+  { name: 'Home', href: '/home' },
   { name: 'Profile', href: '/profile' },
   { name: 'Matchmaking', href: '/matchmaking' },
 ];
 
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(' ');
-}
-
 /**
  * Navbar component
  *
- * @todo add param { UserSession } user - User session object
- * @todo make this filter base on actual user role not just hardcoded
+ * @todo make this filter base on actual user login
  *
  */
 class Navbar extends React.Component<WithAuthProps & WithRouterProps> {
@@ -52,7 +49,7 @@ class Navbar extends React.Component<WithAuthProps & WithRouterProps> {
     });
 
     return (
-      <Disclosure as="nav" className="fixed w-full">
+      <Disclosure as="nav" className="fixed w-full z-50">
         {({ open }) => (
           <>
             <Transition
@@ -113,7 +110,7 @@ class Navbar extends React.Component<WithAuthProps & WithRouterProps> {
                   <div className="relative flex h-16 items-center justify-between">
                     <div className="flex flex-1 items-center justify-start ">
                       {/* Left */}
-                      <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md p-2 text-black ">
+                      <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md p-1.5 text-black bg-off-yellow shadow-sm">
                         <span className="absolute -inset-0.5" />
                         <span className="sr-only">Open main menu</span>
                         <Bars3BottomLeftIcon className="block h-6 w-6" />
