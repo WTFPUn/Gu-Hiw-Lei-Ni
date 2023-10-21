@@ -44,7 +44,7 @@ class TextForm extends React.Component<TextFormProps, TextFormState> {
     const elems: React.ReactElement[] = [];
     if (this.props.text) {
       elems.push(
-        <div key="text" className="text-md">
+        <div key={'text' + this.props.text} className="text-md">
           {this.props.text}{' '}
           {this.props.required && <span className="text-red-500">*</span>}
         </div>,
@@ -52,9 +52,10 @@ class TextForm extends React.Component<TextFormProps, TextFormState> {
     }
     elems.push(
       <input
+        key={'input' + this.props.text}
         type={this.props.password ? 'password' : 'text'}
         className={
-          'border-2 border-secondary bg-transparent placeholder:text-gray rounded-xl px-4 py-2 mt-2  ' +
+          'border-2 border-secondary bg-transparent placeholder:text-gray rounded-xl px-4 py-3 mt-2  ' +
           (this.props.width ? this.props.width + ' ' : '')
         }
         required={this.props.required ? this.props.required : false}

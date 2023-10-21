@@ -1,14 +1,14 @@
 import React, { Component } from 'react';
 
-interface ImageUploadFormProps {
+type ImageUploadFormProps = {
   imageUrl?: string;
   onImageChange?: (file: File) => void;
-}
+};
 
-interface ImageUploadFormState {
+type ImageUploadFormState = {
   imageFile: File | null;
   imageUrl: string;
-}
+};
 
 class ImageUploadForm extends Component<
   ImageUploadFormProps,
