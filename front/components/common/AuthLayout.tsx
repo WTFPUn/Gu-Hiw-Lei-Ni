@@ -5,9 +5,9 @@ import { WithRouterProps } from 'next/dist/client/with-router';
 
 // Learn more about layout components pattern at https://nextjs.org/docs/pages/building-your-application/routing/pages-and-layouts
 
-interface AuthLayoutProps extends WithRouterProps {
+type AuthLayoutProps = WithRouterProps & {
   children: React.ReactNode;
-}
+};
 
 /**
  *  Auth layout component
