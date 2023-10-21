@@ -49,7 +49,7 @@ class Navbar extends React.Component<WithAuthProps & WithRouterProps> {
     });
 
     return (
-      <Disclosure as="nav" className="fixed w-full z-50">
+      <Disclosure as="nav" className="fixed w-[90%] z-50">
         {({ open }) => (
           <>
             <Transition
@@ -105,7 +105,7 @@ class Navbar extends React.Component<WithAuthProps & WithRouterProps> {
               </Disclosure.Panel>
             </Transition>
             {!open && (
-              <div className="bg-transparent z-50">
+              <div className="bg-transparent ">
                 <div className="mx-auto  px-2  ">
                   <div className="relative flex h-16 items-center justify-between">
                     <div className="flex flex-1 items-center justify-start ">
