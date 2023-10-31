@@ -153,7 +153,7 @@ class Home extends React.Component<HomeProps, HomeState> {
               zoom={this.state.zoom || undefined}
               options={{
                 zoomControlOptions: {
-                  position: 3,
+                  position: 0,
                 },
                 fullscreenControl: false,
               }}
