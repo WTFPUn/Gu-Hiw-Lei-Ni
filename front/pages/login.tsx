@@ -47,7 +47,7 @@ class Login extends React.Component<WithRouterProps, {}> {
     return (
       <AuthLayout>
         <h1 className="text-3xl font-semibold pl-8">Let’s sign you in.</h1>
-        <h2 className="text-3xl font-light text-gray pl-8 pt-2">
+        <h2 className="text-3xl font-light text-light-gray pl-8 pt-2">
           And find something to eat!
         </h2>
         <form

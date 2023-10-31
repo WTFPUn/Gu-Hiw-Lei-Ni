@@ -14,7 +14,9 @@ class Layout extends React.Component<{ children: React.ReactNode }> {
     return (
       <>
         <Navbar />
-        <main className="min-h-screen bg-[#FAF5E4]">{this.props.children}</main>
+        <main className="min-h-screen min-w-screen bg-cream">
+          {this.props.children}
+        </main>
       </>
     );
   }

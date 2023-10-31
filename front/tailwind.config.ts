@@ -17,10 +17,10 @@ const config: Config = {
       colors: {
         primary: '#125B50',
         secondary: '#F8B401',
-        'off-yellow': '#FAF5E4',
-        'light-red': '#FF6363',
-        yellow: '#F8B401',
-        gray: '#878787',
+        cream: '#FAF5E4',
+        redish: '#FF6363',
+        'light-gray': '#878787',
+        'dark-gray': '#454545',
       },
       fontFamily: {
         sans: ['"Poppins"', ...defaultTheme.fontFamily.sans],

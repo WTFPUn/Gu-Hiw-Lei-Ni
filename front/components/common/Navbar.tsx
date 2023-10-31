@@ -24,21 +24,19 @@ const navigation: NavigationItem[] = [
 /**
  * Navbar component
  *
- * @todo make this filter base on actual user login
- *
  */
 class Navbar extends React.Component<WithAuthProps & WithRouterProps> {
   render() {
     const navigationItem = navigation.map(item => {
       item.active = this.props.router.pathname.includes(item.href);
       return (
-        <Link href={item.href} className="w-full">
+        <Link href={item.href} className="w-full ">
           <Disclosure.Button
             key={item.name}
             as="a"
             href="#"
             className={classNames(
-              'block rounded-r-2xl px-3 py-4 text-base font-medium max-w-[95%]',
+              'block rounded-l-2xl px-3 py-4 text-base font-medium text-right pr-5 max-w-[95%] ml-auto',
               item?.active ? 'bg-primary text-white' : '',
             )}
           >
@@ -49,7 +47,7 @@ class Navbar extends React.Component<WithAuthProps & WithRouterProps> {
     });
 
     return (
-      <Disclosure as="nav" className="fixed w-[90%] z-50">
+      <Disclosure as="nav" className="fixed w-[100%] z-50">
         {({ open }) => (
           <>
             <Transition
@@ -67,15 +65,15 @@ class Navbar extends React.Component<WithAuthProps & WithRouterProps> {
             </Transition>
             <Transition
               enter="transition duration-100 ease-out"
-              enterFrom="transform -translate-x-full opacity-0"
+              enterFrom="transform translate-x-full opacity-0"
               enterTo="transform translate-x-0 opacity-100"
               leave="transition duration-100 ease-out"
               leaveFrom="transform translate-x-0 opacity-100"
-              leaveTo="transform -translate-x-full opacity-0"
+              leaveTo="transform translate-x-full opacity-0"
             >
-              <Disclosure.Panel className="h-screen left-0 bg-transparent absolute">
-                <div className="pb-3 h-full w-[75vw] md:w-[50vw] lg:w-[30vw] bg-off-yellow relative inset-y-0 right-0">
-                  <div className="relative p-3 pr-3 flex justify-end">
+              <Disclosure.Panel className="h-screen right-0 bg-transparent absolute">
+                <div className="pb-3 h-full w-[75vw] md:w-[50vw] lg:w-[30vw] bg-cream relative inset-y-0 right-0">
+                  <div className="relative p-3 pr-3 flex justify-start">
                     <Disclosure.Button
                       as="div"
                       className="relative cursor-pointer inline-flex items-center justify-center rounded-md p-2 text-black z-100"
@@ -89,8 +87,8 @@ class Navbar extends React.Component<WithAuthProps & WithRouterProps> {
                     </Disclosure.Button>
                   </div>
                   <div className="flex flex-col ">{navigationItem}</div>
-                  <div className="flex flex-col h-[75%] px-4 justify-end">
-                    {this.props.auth_status && (
+                  <div className="flex flex-col h-[75%] px-4 justify-end pb-10">
+                    {this.props.auth_status ? (
                       <Button
                         text="Log out"
                         onClick={() => {
@@ -98,6 +96,14 @@ class Navbar extends React.Component<WithAuthProps & WithRouterProps> {
                           this.props.router.push('/');
                         }}
                         danger
+                      />
+                    ) : (
+                      <Button
+                        text="Log in"
+                        onClick={() => {
+                          this.props.router.push('/login');
+                        }}
+                        primary
                       />
                     )}
                   </div>
@@ -110,14 +116,14 @@ class Navbar extends React.Component<WithAuthProps & WithRouterProps> {
                   <div className="relative flex h-16 items-center justify-between">
                     <div className="flex flex-1 items-center justify-start ">
                       {/* Left */}
-                      <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md p-1.5 text-black bg-off-yellow shadow-sm">
+                    </div>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 ">
+                      {/* Right */}
+                      <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md p-1.5 text-black bg-cream shadow-sm">
                         <span className="absolute -inset-0.5" />
                         <span className="sr-only">Open main menu</span>
                         <Bars3BottomLeftIcon className="block h-6 w-6" />
                       </Disclosure.Button>
-                    </div>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 ">
-                      {/* Right */}
                     </div>
                   </div>
                 </div>
