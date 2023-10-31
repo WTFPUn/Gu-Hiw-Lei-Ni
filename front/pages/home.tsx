@@ -1,7 +1,7 @@
 import React from 'react';
 import Layout from '@/components/common/Layout';
 import TextForm from '@/components/form/TextForm';
-import GoogleMapReact from 'google-map-react';
+import GoogleMapReact, { meters2ScreenPixels } from 'google-map-react';
 import { Disclosure, Transition } from '@headlessui/react';
 import { HiwMarker, Marker } from '@/components/maps/marker';
 import { classNames } from '@/utils/style';
@@ -11,6 +11,11 @@ import InfoTable from '@/components/party/InfoTable';
 import { withRouter } from 'next/router';
 import { WithRouterProps } from '@/utils/router';
 import { WithAuthProps, withAuth } from '@/utils/auth';
+import DrawerContainer, {
+  DrawerContainerProps,
+} from '@/components/common/DrawerContainer';
+import IconButton from '@/components/common/IconButton';
+import PartyList, { PartyItem } from '@/components/party/PartyList';
 
 type Coords = {
   lat: number;
@@ -22,6 +27,7 @@ type HomeState = {
   selectedMarker: Coords | null;
   currentLocation: Coords | null;
   zoom: number | null;
+  showAll: boolean;
 };
 
 const testLocations = [
@@ -48,10 +54,17 @@ class Home extends React.Component<HomeProps, HomeState> {
       currentLocation: null,
       zoom: 11,
       selectedMarker: null,
+      showAll: false,
     };
 
     this.handleMarkerClick = this.handleMarkerClick.bind(this);
   }
+
+  handleShowAll = () => {
+    this.setState({
+      showAll: !this.state.showAll,
+    });
+  };
 
   handleMarkerClick = (lat: number, lng: number) => {
     this.setState({
@@ -92,6 +105,20 @@ class Home extends React.Component<HomeProps, HomeState> {
     }
   };
 
+  handleGoogleMapsApi = (map: any, maps: any, ref: any) => {
+    const setZoom = (zoom: number) => {
+      this.setState({
+        zoom,
+      });
+    };
+    maps.event.addListener(map, 'zoom_changed', () => {
+      const zoom = map.getZoom();
+      // console.log(zoom);
+      setZoom(zoom);
+    });
+    // console.log(this.state.zoom);
+  };
+
   componentDidMount(): void {
     if (navigator.geolocation) {
       console.log('Geolocation is supported!');
@@ -127,8 +154,18 @@ class Home extends React.Component<HomeProps, HomeState> {
 
   render() {
     const isSelected = this.state.selectedMarker !== null;
-    const { router } = this.props;
+    const { router, auth_status, user } = this.props;
 
+    const { w, h } = meters2ScreenPixels(
+      2000,
+      this.state.currentLocation ?? { lat: 0.0, lng: 0.0 },
+      this.state.zoom || 0,
+    );
+
+    const DrawerContainerDiv = React.forwardRef<
+      HTMLDivElement,
+      DrawerContainerProps
+    >((props, ref) => <DrawerContainer {...props} forwardRef={ref} />);
     return (
       <Layout>
         <div className="w-screen h-screen overflow-hidden">
@@ -157,7 +194,25 @@ class Home extends React.Component<HomeProps, HomeState> {
                 },
                 fullscreenControl: false,
               }}
+              yesIWantToUseGoogleMapApiInternals
+              onGoogleApiLoaded={({ map, maps, ref }) =>
+                this.handleGoogleMapsApi(map, maps, ref)
+              }
             >
+              {this.state.currentLocation && (
+                <Marker
+                  lat={this.state.currentLocation.lat}
+                  lng={this.state.currentLocation.lng}
+                >
+                  <div
+                    style={{
+                      width: w,
+                      height: h,
+                    }}
+                    className="bg-[#F8B401] opacity-20 rounded-full shadow-2xl border-2 border-white translate-x-[-25%] translate-y-[-25%]"
+                  />
+                </Marker>
+              )}
               {testLocations.map((location, index) => {
                 return (
                   <HiwMarker
@@ -177,26 +232,69 @@ class Home extends React.Component<HomeProps, HomeState> {
                   lat={this.state.currentLocation.lat}
                   lng={this.state.currentLocation.lng}
                 >
-                  <div className="w-5 h-5 bg-blue-500 rounded-full shadow-2xl border-2 border-white" />
+                  <div className="w-5 h-5 bg-blue-500 rounded-full shadow-2xl border-2 border-white translate-x-[-25%] translate-y-[-25%]" />
                 </Marker>
               )}
             </GoogleMapReact>
           </div>
 
+          {/* Drawer */}
           <div className="fixed z-40 bottom-0 w-screen">
             {/* Distance Form */}
-            <div className="p-4 shadow-xl px-10 pb-16 bg-cream rounded-t-2xl fixed bottom-0 left-0 sm:left-[12.5%] md:left-[20%] w-screen sm:w-[75vw] md:w-[60vw]">
-              <DropdownForm
-                text="Distance"
-                options={[
-                  { value: '1', text: '1 km' },
-                  { value: '2', text: '2 km' },
-                  { value: '3', text: '3 km' },
-                  { value: '4', text: '4 km' },
-                  { value: '5', text: '5 km' },
-                ]}
-              />
-            </div>
+            <DrawerContainer
+              className={classNames(
+                'animation transition-transform transform ease-out pb-16 flex flex-col duration-200 ',
+                this.state.showAll && !this.state.selectedMarker
+                  ? ''
+                  : 'translate-y-[25vh]',
+              )}
+            >
+              <div className="pb-4 flex justify-center gap-6">
+                <IconButton img={'/magnifyingglass.png'} text="Matchmaking" />
+                <IconButton img={'/sushiroll.png'} text="Matchmaking" />
+                <IconButton img={'/rice.png'} text="Matchmaking" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <DropdownForm
+                  text="Distance"
+                  options={[
+                    { value: '1', text: '1 km' },
+                    { value: '2', text: '2 km' },
+                    { value: '3', text: '3 km' },
+                    { value: '4', text: '4 km' },
+                    { value: '5', text: '5 km' },
+                  ]}
+                />
+                <div className="flex justify-between text-xs">
+                  <span>Found: 3 Party</span>
+                  <a
+                    onClick={this.handleShowAll}
+                    className="text-red-500 underline"
+                    href="#"
+                  >
+                    Show All
+                  </a>
+                </div>
+
+                <div
+                  className={classNames(
+                    'h-[25vh] transition-opacity duration-200 ease-out',
+                    this.state.showAll ? '' : 'opacity-0',
+                  )}
+                >
+                  <PartyList>
+                    <PartyItem name="Test Party" distance={0.2} />
+                    <PartyItem name="Test Party" distance={0.2} />
+                    <PartyItem name="Test Party" distance={0.2} />
+                    <PartyItem name="Test Party" distance={0.2} />
+                    <PartyItem name="Test Party" distance={0.2} />
+                    <PartyItem name="Test Party" distance={0.2} />
+                    <PartyItem name="Test Party" distance={0.2} />
+                    <PartyItem name="Test Party" distance={0.2} />
+                  </PartyList>
+                </div>
+              </div>
+            </DrawerContainer>
 
             {/* Location Detail */}
             <Transition
@@ -209,14 +307,14 @@ class Home extends React.Component<HomeProps, HomeState> {
               leaveTo="transform translate-y-full"
               as={React.Fragment}
             >
-              <div className="p-4 shadow-xl h-1/2 px-10  bg-cream rounded-t-2xl fixed bottom-0 left-0 sm:left-[12.5%] md:left-[20%] w-screen sm:w-[75vw] md:w-[60vw] ">
+              <DrawerContainerDiv className="h-[55vh]">
                 <div className="absolute transform w-20 h-20 p-2 bg-cream left-1/2 -translate-y-3/4 -translate-x-1/2  rounded-full">
                   <img
                     src="/meat.png"
                     className="rounded-full border border-yellow"
                   />
                 </div>
-                <div className="h-full flex flex-col overflow-y-auto container">
+                <div className="h-full flex flex-col overflow-y-auto container containerscroll">
                   <div className="flex flex-col justify-center items-center pt-6 pb-2 ">
                     <div className="text-2xl font-semibold">Hiw</div>
                     <div className="text-lg text-light-gray">Hiw</div>
@@ -252,7 +350,7 @@ class Home extends React.Component<HomeProps, HomeState> {
                     </div>
                   </div>
                 </div>
-              </div>
+              </DrawerContainerDiv>
             </Transition>
           </div>
         </div>
