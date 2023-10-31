@@ -27,7 +27,7 @@ class Button extends React.Component<ButtonProps, {}> {
         this.props.primary
           ? 'bg-primary text-white'
           : this.props.danger
-          ? 'border-2 border-light-red text-light-red'
+          ? 'border-2 border-redish text-redish'
           : 'border-2 border-secondary text-secondary'
       } 
       text-sm font-normal 

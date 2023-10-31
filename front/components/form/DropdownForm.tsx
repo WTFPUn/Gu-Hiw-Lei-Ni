@@ -46,7 +46,7 @@ class DropdownForm extends React.Component<
       <select
         key={'dropdown' + this.props.text}
         className={
-          'border-2 border-secondary bg-transparent placeholder:text-gray rounded-xl px-4 py-3 mt-2  ' +
+          'border-2 border-secondary bg-transparent placeholder:text-light-gray rounded-xl px-4 py-3 mt-2  ' +
           (this.props.width ? this.props.width + ' ' : '')
         }
         required={this.props.required ? this.props.required : false}
