@@ -1,8 +1,8 @@
 import React from 'react';
 import Layout from '@/components/common/Layout';
-import TextForm from '@/components/form/TextForm';
-import GoogleMapReact, { meters2ScreenPixels } from 'google-map-react';
-import { Disclosure, Transition } from '@headlessui/react';
+
+import GoogleMapReact, { Coords, meters2ScreenPixels } from 'google-map-react';
+import { Transition } from '@headlessui/react';
 import { HiwMarker, Marker } from '@/components/maps/marker';
 import { classNames } from '@/utils/style';
 import DropdownForm from '@/components/form/DropdownForm';
@@ -16,11 +16,7 @@ import DrawerContainer, {
 } from '@/components/common/DrawerContainer';
 import IconButton from '@/components/common/IconButton';
 import PartyList, { PartyItem } from '@/components/party/PartyList';
-
-type Coords = {
-  lat: number;
-  lng: number;
-};
+import { testLocations } from '@/utils/map';
 
 type HomeState = {
   center: Coords | null;
@@ -29,17 +25,6 @@ type HomeState = {
   zoom: number | null;
   showAll: boolean;
 };
-
-const testLocations = [
-  {
-    lat: 13.7379,
-    lng: 100.5604,
-  },
-  {
-    lat: 13.6513,
-    lng: 100.4964,
-  },
-];
 
 type HomeProps = WithRouterProps & WithAuthProps;
 class Home extends React.Component<HomeProps, HomeState> {
@@ -168,7 +153,7 @@ class Home extends React.Component<HomeProps, HomeState> {
     >((props, ref) => <DrawerContainer {...props} forwardRef={ref} />);
     return (
       <Layout>
-        <div className="w-screen h-screen overflow-hidden">
+        <div className="w-screen h-screen overflow-hidden overflow-x-hidden">
           <div
             className={classNames(
               'w-full overflow-hidden transform transition-all duration-500 translate-y',
@@ -251,8 +236,16 @@ class Home extends React.Component<HomeProps, HomeState> {
             >
               <div className="pb-4 flex justify-center gap-6">
                 <IconButton img={'/magnifyingglass.png'} text="Matchmaking" />
-                <IconButton img={'/sushiroll.png'} text="Matchmaking" />
-                <IconButton img={'/rice.png'} text="Matchmaking" />
+                <IconButton
+                  img={'/sushiroll.png'}
+                  text="Current Party"
+                  onClick={e => router.push('/currentparty')}
+                />
+                <IconButton
+                  img={'/rice.png'}
+                  text="Create Party"
+                  onClick={e => router.push('/createparty')}
+                />
               </div>
               <div className="flex flex-col gap-1">
                 <DropdownForm
