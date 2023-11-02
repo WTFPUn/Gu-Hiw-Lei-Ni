@@ -44,9 +44,11 @@ class TextForm extends React.Component<TextFormProps, TextFormState> {
     const elems: React.ReactElement[] = [];
     if (this.props.text) {
       elems.push(
-        <div key={'text' + this.props.text} className="text-md">
+        <div key={'text' + this.props.text} className="text-md font-medium">
           {this.props.text}{' '}
-          {this.props.required && <span className="text-red-500">*</span>}
+          {this.props.required && (
+            <span className="text-red-500 font-normal">*</span>
+          )}
         </div>,
       );
     }

@@ -48,7 +48,21 @@ class InfoTable extends React.Component<InfoTableProps> {
         </RowItem>
         <RowItem name="Description">{partyInfo.description}</RowItem>
         <RowItem name="Distance">{partyInfo.distance + ' km'}</RowItem>
-        <RowItem name="Price">{partyInfo.price}</RowItem>
+        <RowItem name="Price">
+          <img
+            src={
+              partyInfo.price == 1
+                ? '/price1.svg'
+                : partyInfo.price == 2
+                ? '/price2.svg'
+                : partyInfo.price == 3
+                ? '/price3.svg'
+                : ''
+            }
+            alt=""
+            className="w-16 h-8"
+          />
+        </RowItem>
         <RowItem name="Party Size">{partyInfo.partySize}</RowItem>
         <RowItem name="Host">
           {
