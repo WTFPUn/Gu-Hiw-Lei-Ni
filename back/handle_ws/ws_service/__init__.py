@@ -12,7 +12,10 @@ class WebSocketService(ABC, Generic[WsRequest]):
     Abstract class for websocket service.
     """
 
-    pub_sub: PubSub = PubSub()
+    RequestType: WsRequest
+
+    def __init__(self) -> None:
+        self.pub_sub: PubSub = PubSub()
 
     @abstractmethod
     async def handle_ws(self, request: WsRequest, websocket: WebSocket) -> None:
@@ -20,3 +23,6 @@ class WebSocketService(ABC, Generic[WsRequest]):
         Handle websocket request.
         """
         pass
+
+    def __str__(self) -> str:
+        return self.__class__.__name__
