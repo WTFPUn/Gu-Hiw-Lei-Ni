@@ -9,6 +9,7 @@ from starlette.middleware.cors import CORSMiddleware
 from uvicorn import Config, Server
 from logging import Logger
 from handle_req.auth import Auth
+from handle_ws import WebSocketMultiplexer
 from pymongo import MongoClient
 
 dotenv.load_dotenv()
@@ -35,6 +36,11 @@ async def main() -> None:
     auth = Auth(mongo_client)
     Auth.load_mongo_client(auth, mongo_client)
     app.routes.extend(auth.route())
+
+    # init mux
+    mux = WebSocketMultiplexer(mongo_client)
+    app.add_websocket_route("/ws", mux.handle_mux)
+
     # init server
     server: Server = Server(
         Config(
