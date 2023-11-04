@@ -17,6 +17,7 @@ import DrawerContainer, {
 import IconButton from '@/components/common/IconButton';
 import PartyList, { PartyItem } from '@/components/party/PartyList';
 import { testLocations } from '@/utils/map';
+import Link from 'next/link';
 
 type HomeState = {
   center: Coords | null;
@@ -226,68 +227,87 @@ class Home extends React.Component<HomeProps, HomeState> {
           {/* Drawer */}
           <div className="fixed z-40 bottom-0 w-screen">
             {/* Distance Form */}
-            <DrawerContainer
-              className={classNames(
-                'animation transition-transform transform ease-out pb-16 flex flex-col duration-200 ',
-                this.state.showAll && !this.state.selectedMarker
-                  ? ''
-                  : 'translate-y-[25vh]',
-              )}
-            >
-              <div className="pb-4 flex justify-center gap-6">
-                <IconButton img={'/magnifyingglass.png'} text="Matchmaking" />
-                <IconButton
-                  img={'/sushiroll.png'}
-                  text="Current Party"
-                  onClick={e => router.push('/currentparty')}
-                />
-                <IconButton
-                  img={'/rice.png'}
-                  text="Create Party"
-                  onClick={e => router.push('/createparty')}
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <DropdownForm
-                  text="Distance"
-                  options={[
-                    { value: '1', text: '1 km' },
-                    { value: '2', text: '2 km' },
-                    { value: '3', text: '3 km' },
-                    { value: '4', text: '4 km' },
-                    { value: '5', text: '5 km' },
-                  ]}
-                />
-                <div className="flex justify-between text-xs">
-                  <span>Found: 3 Party</span>
-                  <a
-                    onClick={this.handleShowAll}
-                    className="text-red-500 underline"
-                    href="#"
-                  >
-                    Show All
-                  </a>
+            {this.props.auth_status == false && (
+              <DrawerContainer className="animation transition-transform transform ease-out pb-16 pt-8 flex flex-col duration-200">
+                <div className="text-center font-normal">
+                  {'Don’t have an account?    '}
+                  <Link href="/register" className="font-semibold">
+                    Register
+                  </Link>
                 </div>
+                <Button
+                  text="Login"
+                  primary
+                  onClick={e => {
+                    this.props.router.push('/login');
+                  }}
+                />
+              </DrawerContainer>
+            )}
+            {this.props.auth_status == true && (
+              <DrawerContainer
+                className={classNames(
+                  'animation transition-transform transform ease-out pb-16 flex flex-col duration-200 ',
+                  this.state.showAll && !this.state.selectedMarker
+                    ? ''
+                    : 'translate-y-[25vh]',
+                )}
+              >
+                <div className="pb-4 flex justify-center gap-6">
+                  <IconButton img={'/magnifyingglass.png'} text="Matchmaking" />
+                  <IconButton
+                    img={'/sushiroll.png'}
+                    text="Current Party"
+                    onClick={e => router.push('/currentparty')}
+                  />
+                  <IconButton
+                    img={'/rice.png'}
+                    text="Create Party"
+                    onClick={e => router.push('/createparty')}
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <DropdownForm
+                    text="Distance"
+                    options={[
+                      { value: '1', text: '1 km' },
+                      { value: '2', text: '2 km' },
+                      { value: '3', text: '3 km' },
+                      { value: '4', text: '4 km' },
+                      { value: '5', text: '5 km' },
+                    ]}
+                  />
+                  <div className="flex justify-between text-xs">
+                    <span>Found: 3 Party</span>
+                    <a
+                      onClick={this.handleShowAll}
+                      className="text-red-500 underline"
+                      href="#"
+                    >
+                      Show All
+                    </a>
+                  </div>
 
-                <div
-                  className={classNames(
-                    'h-[25vh] transition-opacity duration-200 ease-out',
-                    this.state.showAll ? '' : 'opacity-0',
-                  )}
-                >
-                  <PartyList>
-                    <PartyItem name="Test Party" distance={0.2} />
-                    <PartyItem name="Test Party" distance={0.2} />
-                    <PartyItem name="Test Party" distance={0.2} />
-                    <PartyItem name="Test Party" distance={0.2} />
-                    <PartyItem name="Test Party" distance={0.2} />
-                    <PartyItem name="Test Party" distance={0.2} />
-                    <PartyItem name="Test Party" distance={0.2} />
-                    <PartyItem name="Test Party" distance={0.2} />
-                  </PartyList>
+                  <div
+                    className={classNames(
+                      'h-[25vh] transition-opacity duration-200 ease-out',
+                      this.state.showAll ? '' : 'opacity-0',
+                    )}
+                  >
+                    <PartyList>
+                      <PartyItem name="Test Party" distance={0.2} />
+                      <PartyItem name="Test Party" distance={0.2} />
+                      <PartyItem name="Test Party" distance={0.2} />
+                      <PartyItem name="Test Party" distance={0.2} />
+                      <PartyItem name="Test Party" distance={0.2} />
+                      <PartyItem name="Test Party" distance={0.2} />
+                      <PartyItem name="Test Party" distance={0.2} />
+                      <PartyItem name="Test Party" distance={0.2} />
+                    </PartyList>
+                  </div>
                 </div>
-              </div>
-            </DrawerContainer>
+              </DrawerContainer>
+            )}
 
             {/* Location Detail */}
             <Transition
