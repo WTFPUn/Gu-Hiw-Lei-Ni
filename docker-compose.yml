@@ -21,6 +21,7 @@ services:
       - "3001:3000"
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NEXT_PUBLIC_GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - PORT=3000
       - HOST=0.0.0.0
     restart: unless-stopped
