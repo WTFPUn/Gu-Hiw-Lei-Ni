@@ -1,9 +1,9 @@
-from typing import Callable, List, Tuple, Set
-from handle_ws.ws_service import WebSocketService
+from __future__ import annotations
+
+from typing import Callable, List, Tuple, Set, ForwardRef
 from starlette.websockets import WebSocket
 from pydantic import BaseModel
 from typing import Dict, Union, Annotated, Literal, List
-from pub_sub import Channel, PubSub
 
 
 class SubscribeError(Exception):
@@ -14,8 +14,8 @@ class SubscribeError(Exception):
     pass
 
 
-channel = Tuple[str, ...]
-serviceType = Tuple[PubSub, channel]
+Channel = Tuple[str, ...]
+serviceType = Tuple[ForwardRef("PubSub"), Channel]  # type: ignore
 
 
 class Client:
@@ -32,7 +32,7 @@ class Client:
         self.subscribe_service = set()
         self.callback = callback
 
-    def add_service(self, service: PubSub, channel: Channel) -> bool:
+    def add_service(self, service, channel: Channel) -> bool:  # type: ignore
         """
         Add service to client.
         """
@@ -41,7 +41,7 @@ class Client:
         self.subscribe_service.add((service, channel))
         return True
 
-    def remove_service(self, service: PubSub, channel: Channel) -> bool:
+    def remove_service(self, service, channel: Channel) -> bool:
         """
         Remove service from client.
         """
