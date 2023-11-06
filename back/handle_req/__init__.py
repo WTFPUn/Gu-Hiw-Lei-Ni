@@ -65,6 +65,9 @@ class HandleRequest(Generic[GenericRequestBody, GenericRequestQParam], ABC):
         self.mongo_client = mongo_client
         return None
 
+    def load_google_api_key(self, api_key: str) -> None:
+        self.api_key = api_key
+        return None
     def __str__(self) -> str:
         return "/" + self.__class__.__name__.lower()
 
