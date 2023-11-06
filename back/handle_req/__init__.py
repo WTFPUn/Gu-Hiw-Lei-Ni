@@ -40,12 +40,15 @@ class HandleRequest(Generic[GenericRequestBody, GenericRequestQParam], ABC):
         if request.method not in self.method:
             return Response("Method not allowed", status_code=405)
         try:
-            if "GET" == request.method:
-                self.query = self.RequesstQParam.model_validate(request.query_params)
-            if request.method in ["POST", "PUT"]:
-                body = await request.json()
-                self.logger.debug(body)
-                self.body = self.RequestBody.model_validate(body)
+            if self.RequestBody != None:
+                if request.method in ["POST", "PUT"]:
+                    body = await request.json()
+                    self.logger.debug(body)
+                    self.body = self.RequestBody.model_validate(body) # type: ignore
+
+            if self.RequesstQParam != None:
+                if "GET" == request.method:
+                    self.query = self.RequesstQParam.model_validate(request.query_params) # type: ignore
 
             return await self._handle()
         except Exception as e:
