@@ -20,13 +20,21 @@ class JoinPartyRequest(BaseModel):
     party_id: str
 
 
-class MatchMakingRequest(BaseModel):
-    type: Literal["match_making"] = "match_making"
+# class MatchMakingRequest(BaseModel):
+#     type: Literal["match_making"] = "match_making"
+#     party_id: str
+
+class StartPartyRequest(BaseModel):
+    type: Literal["start_party"] = "start_party"
+    party_id: str
+
+class ClosePartyRequest(BaseModel):
+    type: Literal["close_party"] = "close_party"
     party_id: str
 
 
 PartyHandlerRequest = Annotated[
-    Union[CreatePartyRequest, JoinPartyRequest, MatchMakingRequest],
+    Union[CreatePartyRequest, JoinPartyRequest, StartPartyRequest],
     Field(discriminator="type"),
 ]
 
@@ -44,6 +52,6 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
         """
         Handle websocket request.
         """
-        self.pub_sub.register()
+        self.pub_sub.register(())
         # request =  self.RequestType.
         pass
