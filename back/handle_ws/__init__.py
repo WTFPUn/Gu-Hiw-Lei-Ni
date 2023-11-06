@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field, TypeAdapter
 from pymongo import MongoClient
 from logging import Logger
 import logging
+from starlette.websockets import WebSocketState
 
 from starlette.websockets import WebSocket
 from starlette.endpoints import WebSocketEndpoint
@@ -40,6 +41,7 @@ MuxRequestParsing = Annotated[
 class WSRequest(BaseModel):
     type: Literal["ws"] = "ws"
     token: str
+    service: str
     data: MuxRequestParsing
 
 
@@ -77,8 +79,19 @@ class WebSocketMultiplexer:
 
                 # get client from request
                 if isinstance(request, WSConnectRequest):
-                    client = Client(request.token, websocket)
-                    self.clients[request.token] = client
+                    if request.token in self.clients:
+                        # check if client is in closed state, set websocket to new websocket
+                        if (
+                            self.clients[request.token].callback.client_state
+                            == WebSocketState.DISCONNECTED
+                        ):
+                            self.clients[request.token].callback = websocket
+                            await websocket.send_json(
+                                {"type": "success", "data": "reconnected"}
+                            )
+                    else:
+                        client = Client(request.token, websocket)
+                        self.clients[request.token] = client
                     # verify token is valid
                     # implement laters
 
@@ -86,10 +99,7 @@ class WebSocketMultiplexer:
                 elif isinstance(request, WSRequest):
                     assert request.token in self.clients, "Client not connected"
                     client = self.clients[request.token]
-                    ws_request = request.data
-                    await client.callback.send_json(
-                        {"type": "success", "data": "connected"}
-                    )
+                    await self.services[request.service].handle_ws(request.data, client)
 
                 else:
                     await websocket.close()
