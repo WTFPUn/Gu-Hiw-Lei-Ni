@@ -8,6 +8,7 @@ from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 from uvicorn import Config, Server
 from logging import Logger
+from handle_req.maps import Maps
 from handle_req.auth import Auth
 from handle_ws import WebSocketMultiplexer
 from pymongo import MongoClient
@@ -34,7 +35,13 @@ async def main() -> None:
 
     # Add routes
     auth = Auth(mongo_client)
-    Auth.load_mongo_client(auth, mongo_client)
+    auth.load_mongo_client(mongo_client)
+    auth.load_google_api_key(os.getenv("GOOGLE_API_KEY"))  # type: ignore
+
+    map = Maps(mongo_client)
+    map.load_mongo_client(mongo_client)
+    map.load_google_api_key(os.getenv("GOOGLE_API_KEY"))  # type: ignore
+
     app.routes.extend(auth.route())
 
     # init mux

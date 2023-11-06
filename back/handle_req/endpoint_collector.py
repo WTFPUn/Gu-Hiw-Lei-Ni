@@ -4,10 +4,9 @@ from handle_req import HandleRequest
 
 
 class EndpointCollector:
-    handlings: List[HandleRequest]
-
     def __init__(self, mongo_client) -> None:
         self.mongo_client = mongo_client
+        self.handlings: List[HandleRequest] = []
 
     def __str__(self) -> str:
         return "/" + self.__class__.__name__.lower()
@@ -23,8 +22,12 @@ class EndpointCollector:
         cls.handlings = handlings
         return None
 
-    @staticmethod
-    def load_mongo_client(cls, mongo_client) -> None:
-        for h in cls.handlings:
+    def load_mongo_client(self, mongo_client) -> None:
+        for h in self.handlings:
             h.load_mongo_client(mongo_client)
+        return None
+
+    def load_google_api_key(self, api_key: str) -> None:
+        for h in self.handlings:
+            h.load_google_api_key(api_key)
         return None
