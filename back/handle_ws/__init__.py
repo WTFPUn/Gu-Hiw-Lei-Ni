@@ -73,6 +73,8 @@ class WebSocketMultiplexer:
 
     def __init__(self, mongo_client: MongoClient) -> None:
         self.mongo_client = mongo_client
+        for service in self.handler.values():
+            service.set_mongo_client(mongo_client)
 
     async def handle_mux(self, websocket: WebSocket):
         # validate model first
