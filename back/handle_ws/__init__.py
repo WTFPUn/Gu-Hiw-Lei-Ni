@@ -50,8 +50,15 @@ class WSConnectRequest(BaseModel):
     token: str
 
 
+class PubSubChannel(BaseModel):
+    type: Literal["sub", "unsub", "get"]
+    token: str
+    service: str
+    channel: Channel
+
+
 WSRequestParsing = Annotated[
-    Union[WSRequest, WSConnectRequest], Field(discriminator="type")
+    Union[WSRequest, WSConnectRequest, PubSubChannel], Field(discriminator="type")
 ]
 
 parsingAdapter = TypeAdapter(WSRequestParsing)
@@ -99,8 +106,29 @@ class WebSocketMultiplexer:
                 elif isinstance(request, WSRequest):
                     assert request.token in self.clients, "Client not connected"
                     client = self.clients[request.token]
-                    await self.services[request.service].handle_ws(request.data, client)
-
+                    await self.handler[request.service].handle_ws(request.data, client)
+                elif isinstance(request, PubSubChannel):
+                    if request.type == "sub":
+                        self.clients[request.token].add_service(
+                            (self.handler[request.service].pub_sub, request.channel)
+                        )
+                    elif request.type == "unsub":
+                        self.clients[request.token].remove_service(
+                            (self.handler[request.service].pub_sub, request.channel)
+                        )
+                    elif request.type == "get":
+                        await websocket.send_json(
+                            {
+                                "type": "success",
+                                "data": self.handler[request.service]
+                                .pub_sub.channel_message[request.channel]
+                                .model_dump_json(),
+                            }
+                        )
+                    else:
+                        await websocket.send_json(
+                            {"type": "error", "data": "Invalid request type"}
+                        )
                 else:
                     await websocket.close()
                     self.logger.error("Invalid request type")
