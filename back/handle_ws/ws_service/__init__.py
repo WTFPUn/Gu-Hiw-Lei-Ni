@@ -1,8 +1,9 @@
 from typing import TypeVar, Generic
+from handle_ws.client import Client
 from pub_sub import PubSub
 from abc import ABC, abstractmethod
 from pydantic import BaseModel
-from starlette.websockets import WebSocket
+from pymongo import MongoClient
 
 WsRequest = TypeVar("WsRequest", bound=BaseModel)
 
@@ -16,9 +17,13 @@ class WebSocketService(ABC, Generic[WsRequest]):
 
     def __init__(self) -> None:
         self.pub_sub: PubSub = PubSub()
+        self.mongo_client: MongoClient | None = None
+
+    def set_mongo_client(self, mongo_client) -> None:
+        self.mongo_client = mongo_client
 
     @abstractmethod
-    async def handle_ws(self, request: WsRequest, websocket: WebSocket) -> None:
+    async def handle_ws(self, request: WsRequest, client: Client) -> None:
         """
         Handle websocket request.
         """
