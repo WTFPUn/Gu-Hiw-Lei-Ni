@@ -60,14 +60,14 @@ class PubSub:
     def subscribe(self, channel: Channel, client: Client):
         if channel in self.subscribers:
             self.subscribers[channel].add(client)
-            client.add_service(self, channel)
+            client.add_service((self, channel))
         else:
             raise PubSubChannelError("Channel does not exist")
 
     def unsubscribe(self, channel: Channel, client: Client):
         if channel in self.subscribers:
             self.subscribers[channel].remove(client)
-            client.remove_service(self, channel)
+            client.remove_service((self, channel))
         else:
             raise PubSubChannelError("Channel does not exist")
 
