@@ -32,20 +32,20 @@ class Client:
         self.subscribe_service = set()
         self.callback = callback
 
-    def add_service(self, service, channel: Channel) -> bool:  # type: ignore
+    def add_service(self, service: serviceType) -> bool:  # type: ignore
         """
         Add service to client.
         """
         if service in self.subscribe_service:
             raise SubscribeError("Service already subscribe to client.")
-        self.subscribe_service.add((service, channel))
+        self.subscribe_service.add(service)
         return True
 
-    def remove_service(self, service, channel: Channel) -> bool:
+    def remove_service(self, service: serviceType) -> bool:
         """
         Remove service from client.
         """
         if service not in self.subscribe_service:
             raise SubscribeError("Service not subscribe to client.")
-        self.subscribe_service.remove((service, channel))
+        self.subscribe_service.remove(service)
         return True
