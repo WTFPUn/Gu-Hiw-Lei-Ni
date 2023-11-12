@@ -17,10 +17,11 @@ class LoginRequestBody(BaseModel):
 class Login(HandleRequest[LoginRequestBody, None]):
     async def _handle(self) -> Response:
         collection = self.mongo_client["GuHiw"]["User"]
-        if collection.find_one({"user_name": self.body.user_name}):
-            user = collection.find_one({"user_name": self.body.user_name})
+        user = collection.find_one({"user_name": self.body.user_name})
+        if user:
             if bcrypt.checkpw(self.body.password.encode("ascii"), user["password"]):
                 data = {
+                    "user_id": user["user_id"],
                     "user_name": user["user_name"],
                     "first_name": user["first_name"],
                     "last_name": user["last_name"],
