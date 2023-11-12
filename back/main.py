@@ -43,6 +43,7 @@ async def main() -> None:
     map.load_google_api_key(os.getenv("GOOGLE_API_KEY"))  # type: ignore
 
     app.routes.extend(auth.route())
+    app.routes.extend(map.route())
 
     # init mux
     mux = WebSocketMultiplexer(mongo_client)
