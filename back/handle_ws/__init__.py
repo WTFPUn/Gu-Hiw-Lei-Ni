@@ -30,7 +30,7 @@ from handle_ws.ws_service.ws_party import PartyHandler
 partyHandler = PartyHandler()
 
 handler: Dict[str, WebSocketService] = {
-    partyHandler.__class__.__name__: partyHandler,
+    partyHandler.__class__.__name__.lower(): partyHandler,
 }
 
 MuxRequestParsing = Annotated[
