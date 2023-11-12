@@ -71,5 +71,8 @@ class PubSub:
         else:
             raise PubSubChannelError("Channel does not exist")
 
-    # def get(self):
-    #     pass
+    def get(self, channel: Channel) -> BaseModel:
+        if channel in self.subscribers:
+            return self.channel_message[channel]
+        else:
+            raise PubSubChannelError("Channel does not exist")
