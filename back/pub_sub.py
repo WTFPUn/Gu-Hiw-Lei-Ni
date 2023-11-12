@@ -39,6 +39,8 @@ class PubSub:
             raise PubSubChannelError("Channel already exists")
 
     def unregister(self, channel: Channel):
+        for subscriber in self.subscribers[channel]:
+            subscriber.remove_service((self, channel))
         if channel in self.subscribers:
             del self.subscribers[channel]
             del self.channel_message[channel]
