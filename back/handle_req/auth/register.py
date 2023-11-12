@@ -4,6 +4,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 from pydantic import BaseModel, TypeAdapter, ValidationError
 import bcrypt
+from uuid import uuid4
 
 
 class RegisterRequestBody(BaseModel):
@@ -34,6 +35,8 @@ class Register(HandleRequest[RegisterRequestBody, None]):
 
         hashedBody = self.body.model_dump()
         hashedBody["password"] = hashed_password
+
+        hashedBody["user_id"] = str(uuid4())
 
         try:
             collection.insert_one(hashedBody)
