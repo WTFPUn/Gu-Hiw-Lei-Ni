@@ -52,7 +52,7 @@ class PubSub:
             self.channel_message[channel] = message
             for subscriber in self.subscribers[channel]:
                 await subscriber.callback.send_json(
-                    self.channel_message[channel].model_dump()
+                    self.channel_message[channel].model_dump_json()
                 )
         else:
             raise PubSubChannelError("Channel does not exist")
