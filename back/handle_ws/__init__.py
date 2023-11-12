@@ -1,3 +1,4 @@
+from pub_sub import Channel
 from handle_ws.ws_service import WebSocketService
 from handle_ws.client import Client
 from typing import Dict, Union, Annotated, Literal, List
@@ -66,7 +67,6 @@ parsingAdapter = TypeAdapter(WSRequestParsing)
 
 class WebSocketMultiplexer:
     clients: Dict[str, Client] = {}
-    services: Dict[str, WebSocketService] = {}
     mongo_client: MongoClient
     handler: Dict[str, WebSocketService] = handler
     logger = logger.getChild("WebSocketMultiplexer")
