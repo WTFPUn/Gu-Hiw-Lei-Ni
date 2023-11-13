@@ -5,3 +5,4 @@ pydantic
 pymongo[srv]
 bcrypt
 pyjwt
+requests
