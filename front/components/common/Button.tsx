@@ -22,13 +22,13 @@ class Button extends React.Component<ButtonProps, {}> {
     return (
       <button
         className={`
-      rounded-xl px-4 py-4  
+      rounded-xl px-4 py-4 border-2   
       ${
         this.props.primary
-          ? 'bg-primary text-white'
+          ? ' bg-primary text-white border-primary'
           : this.props.danger
-          ? 'border-2 border-redish text-redish'
-          : 'border-2 border-secondary text-secondary'
+          ? ' border-redish text-redish'
+          : ' border-secondary text-secondary'
       } 
       text-sm font-normal 
       `}

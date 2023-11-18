@@ -39,7 +39,6 @@ class Login extends React.Component<WithRouterProps, {}> {
       } catch (e: any) {
         alert(e.message);
       }
-      console.log(data);
     }
   }
 

@@ -106,7 +106,9 @@ class Navbar extends React.Component<NavbarProps> {
                         text="Log out"
                         onClick={() => {
                           logout();
-                          this.props.router.push('/');
+                          this.props.router.push('/').then(() => {
+                            this.props.router.reload();
+                          });
                         }}
                         danger
                       />

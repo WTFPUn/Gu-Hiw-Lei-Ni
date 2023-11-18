@@ -11,6 +11,7 @@ type DropdownFormProps = {
     value: string;
     text: string;
   }[];
+  onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
 };
 
 type DropdownFormState = {
@@ -30,6 +31,16 @@ class DropdownForm extends React.Component<
 
   public get_value() {
     return this.state.value;
+  }
+
+  public set_value(value: string) {
+    this.setState((state: DropdownFormState) => {
+      const newState: DropdownFormState = {
+        ...state,
+        value: value,
+      };
+      return newState;
+    });
   }
 
   render() {
@@ -56,6 +67,9 @@ class DropdownForm extends React.Component<
         value={this.state.value}
         name={this.props.name}
         onChange={e => {
+          if (this.props.onChange) {
+            this.props.onChange(e);
+          }
           this.setState((state: DropdownFormState) => {
             const newState: DropdownFormState = {
               ...state,

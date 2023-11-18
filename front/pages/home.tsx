@@ -16,8 +16,14 @@ import DrawerContainer, {
 } from '@/components/common/DrawerContainer';
 import IconButton from '@/components/common/IconButton';
 import PartyList, { PartyItem } from '@/components/party/PartyList';
-import { testLocations } from '@/utils/map';
+import {
+  calculateDistance,
+  debounce,
+  find_place_info,
+  testLocations,
+} from '@/utils/map';
 import Link from 'next/link';
+import TextForm from '@/components/form/TextForm';
 
 type HomeState = {
   center: Coords | null;
@@ -25,11 +31,15 @@ type HomeState = {
   currentLocation: Coords | null;
   zoom: number | null;
   showAll: boolean;
+  maxDistance: number;
+  placeInfo?: any;
+  menu: 'selectparty' | 'createparty' | 'main';
 };
 
 type HomeProps = WithRouterProps & WithAuthProps;
 class Home extends React.Component<HomeProps, HomeState> {
   private updateInterval: NodeJS.Timeout | null = null;
+  private DistanceDropdownRef: DropdownForm | null = null;
   constructor(props: HomeProps) {
     super(props);
     this.state = {
@@ -41,18 +51,20 @@ class Home extends React.Component<HomeProps, HomeState> {
       zoom: 11,
       selectedMarker: null,
       showAll: false,
+      maxDistance: 4,
+      menu: 'main',
     };
 
-    this.handleMarkerClick = this.handleMarkerClick.bind(this);
+    this.handle_click_marker = this.handle_click_marker.bind(this);
   }
 
-  handleShowAll = () => {
+  handle_show_search_location = () => {
     this.setState({
       showAll: !this.state.showAll,
     });
   };
 
-  handleMarkerClick = (lat: number, lng: number) => {
+  handle_click_marker = (lat: number, lng: number) => {
     this.setState({
       selectedMarker: {
         lat,
@@ -63,18 +75,20 @@ class Home extends React.Component<HomeProps, HomeState> {
         lng,
       },
       zoom: 16,
+      menu: 'selectparty',
     });
   };
 
-  resetMarker = () => {
+  reset_selected_marker = () => {
     this.setState({
       selectedMarker: null,
       center: null,
       zoom: 15.9,
+      menu: 'main',
     });
   };
 
-  updateCurrentLocation = () => {
+  update_current_location = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         position => {
@@ -91,16 +105,63 @@ class Home extends React.Component<HomeProps, HomeState> {
     }
   };
 
-  handleGoogleMapsApi = (map: any, maps: any, ref: any) => {
-    const setZoom = (zoom: number) => {
+  set_current_position = (mapPos: {
+    zoom: number;
+    center: { lat: number; lng: number };
+  }) => {
+    this.setState({
+      ...mapPos,
+    });
+  };
+
+  check_valid_create_location = () => {
+    // reset to current location when over 4km
+    // calculate distance from center screen to current location
+    const { currentLocation, center, maxDistance } = this.state;
+    if (!currentLocation || !center) return false;
+    const distance = calculateDistance(currentLocation, center);
+    console.log(distance);
+    if (distance > maxDistance) {
+      return false;
+    }
+    return true;
+  };
+
+  handle_select_create_location = async () => {
+    if (this.state.menu != 'createparty') return;
+    if (this.check_valid_create_location()) {
+      const places = await find_place_info(this.state.center as any);
+      console.log(places);
       this.setState({
-        zoom,
+        placeInfo: places?.[0],
       });
-    };
-    maps.event.addListener(map, 'zoom_changed', () => {
+    } else {
+      this.setState({
+        center: this.state.currentLocation,
+      });
+    }
+  };
+  // on map load
+  handle_google_maps = (map: any, maps: any, ref: any) => {
+    // maps.event.addListener(map, 'dragend', () => {
+    //   this.handle_select_create_location();
+    // });
+    // maps.event.addListener(map, 'zoom_changed', () => {
+    //   this.handle_select_create_location();
+    // });
+    maps.event.addListener(map, 'idle', () => {
       const zoom = map.getZoom();
-      // console.log(zoom);
-      setZoom(zoom);
+      const centerObj = map.getCenter();
+
+      const centerLat = centerObj.lat();
+      const centerLng = centerObj.lng();
+      const center = {
+        lat: centerLat,
+        lng: centerLng,
+      };
+      debounce(this.handle_select_create_location() as any, 5000);
+
+      this.set_current_position({ zoom, center });
     });
     // console.log(this.state.zoom);
   };
@@ -112,7 +173,7 @@ class Home extends React.Component<HomeProps, HomeState> {
       navigator.geolocation.getCurrentPosition(
         position => {
           console.log(position.coords);
-          this.updateInterval = setTimeout(this.updateCurrentLocation, 10000);
+          this.updateInterval = setTimeout(this.update_current_location, 10000);
 
           this.setState({
             center: {
@@ -139,16 +200,22 @@ class Home extends React.Component<HomeProps, HomeState> {
   }
 
   render() {
-    const isSelected = this.state.selectedMarker !== null;
     const { router, auth_status, user } = this.props;
+    const { selectedMarker, currentLocation, center, zoom, menu, maxDistance } =
+      this.state;
+    const isSelected = selectedMarker !== null;
 
     const { w, h } = meters2ScreenPixels(
-      2000,
-      this.state.currentLocation ?? { lat: 0.0, lng: 0.0 },
-      this.state.zoom || 0,
+      maxDistance * 1000 * 2,
+      currentLocation ?? { lat: 0.0, lng: 0.0 },
+      zoom || 0,
     );
 
-    const DrawerContainerDiv = React.forwardRef<
+    const DrawerPartyDiv = React.forwardRef<
+      HTMLDivElement,
+      DrawerContainerProps
+    >((props, ref) => <DrawerContainer {...props} forwardRef={ref} />);
+    const DrawerCreatePartyDiv = React.forwardRef<
       HTMLDivElement,
       DrawerContainerProps
     >((props, ref) => <DrawerContainer {...props} forwardRef={ref} />);
@@ -164,7 +231,7 @@ class Home extends React.Component<HomeProps, HomeState> {
             {isSelected && (
               <div
                 className="absolute w-screen h-screen bg-transparent z-30"
-                onClick={this.resetMarker}
+                onClick={this.reset_selected_marker}
               />
             )}
 
@@ -172,8 +239,8 @@ class Home extends React.Component<HomeProps, HomeState> {
               bootstrapURLKeys={{
                 key: process.env.NEXT_PUBLIC_GOOGLE_API_KEY || '',
               }}
-              center={this.state.center || undefined}
-              zoom={this.state.zoom || undefined}
+              center={center || undefined}
+              zoom={zoom || undefined}
               options={{
                 zoomControlOptions: {
                   position: 0,
@@ -182,14 +249,11 @@ class Home extends React.Component<HomeProps, HomeState> {
               }}
               yesIWantToUseGoogleMapApiInternals
               onGoogleApiLoaded={({ map, maps, ref }) =>
-                this.handleGoogleMapsApi(map, maps, ref)
+                this.handle_google_maps(map, maps, ref)
               }
             >
-              {this.state.currentLocation && (
-                <Marker
-                  lat={this.state.currentLocation.lat}
-                  lng={this.state.currentLocation.lng}
-                >
+              {currentLocation && (
+                <Marker lat={currentLocation.lat} lng={currentLocation.lng}>
                   <div
                     style={{
                       width: w,
@@ -205,28 +269,35 @@ class Home extends React.Component<HomeProps, HomeState> {
                     key={index + 'hiw'}
                     lat={location.lat}
                     lng={location.lng}
-                    onClick={this.handleMarkerClick}
+                    onClick={this.handle_click_marker}
                     active={
-                      this.state.selectedMarker?.lat === location.lat &&
-                      this.state.selectedMarker?.lng === location.lng
+                      selectedMarker?.lat === location.lat &&
+                      selectedMarker?.lng === location.lng
                     }
                   />
                 );
               })}
-              {this.state.currentLocation && (
-                <Marker
-                  lat={this.state.currentLocation.lat}
-                  lng={this.state.currentLocation.lng}
-                >
+              {currentLocation && (
+                <Marker lat={currentLocation.lat} lng={currentLocation.lng}>
                   <div className="w-5 h-5 bg-blue-500 rounded-full shadow-2xl border-2 border-white translate-x-[-25%] translate-y-[-25%]" />
                 </Marker>
               )}
+
+              <Marker lat={center?.lat ?? 0} lng={center?.lng ?? 0}>
+                {/* current center on map */}
+              </Marker>
             </GoogleMapReact>
           </div>
-
+          <div className="absolute left-1/2 top-1/2">
+            {menu == 'createparty' && (
+              <Marker lat={0} lng={0}>
+                <div className="w-4 h-4 bg-red-500 rounded-full shadow-2xl border-2 border-white translate-x-[-25%] translate-y-[-25%]" />
+              </Marker>
+            )}
+          </div>
           {/* Drawer */}
           <div className="fixed z-40 bottom-0 w-screen">
-            {/* Distance Form */}
+            {/* not auth */}
             {this.props.auth_status == false && (
               <DrawerContainer className="animation transition-transform transform ease-out pb-16 pt-8 flex flex-col duration-200">
                 <div className="text-center font-normal">
@@ -244,11 +315,13 @@ class Home extends React.Component<HomeProps, HomeState> {
                 />
               </DrawerContainer>
             )}
-            {this.props.auth_status == true && (
+
+            {/* main menu */}
+            {auth_status == true && menu == 'main' && (
               <DrawerContainer
                 className={classNames(
                   'animation transition-transform transform ease-out pb-16 flex flex-col duration-200 ',
-                  this.state.showAll && !this.state.selectedMarker
+                  this.state.showAll && !selectedMarker
                     ? ''
                     : 'translate-y-[25vh]',
                 )}
@@ -263,24 +336,47 @@ class Home extends React.Component<HomeProps, HomeState> {
                   <IconButton
                     img={'/rice.png'}
                     text="Create Party"
-                    onClick={e => router.push('/createparty')}
+                    onClick={e => {
+                      if (!currentLocation)
+                        return alert(
+                          'Please enable location permission to be able to create party.',
+                        );
+                      this.setState({
+                        center: {
+                          lat: currentLocation?.lat ?? 0,
+                          lng: currentLocation?.lng ?? 0,
+                        },
+                        zoom: 16,
+                        menu: 'createparty',
+                      });
+                      this.setState({ menu: 'createparty' });
+                      console.log(this.state);
+                    }}
                   />
                 </div>
                 <div className="flex flex-col gap-1">
                   <DropdownForm
                     text="Distance"
                     options={[
-                      { value: '1', text: '1 km' },
-                      { value: '2', text: '2 km' },
-                      { value: '3', text: '3 km' },
                       { value: '4', text: '4 km' },
-                      { value: '5', text: '5 km' },
+                      { value: '3', text: '3 km' },
+                      { value: '2', text: '2 km' },
+                      { value: '1', text: '1 km' },
+                      { value: '0.5', text: '0.5 km' },
                     ]}
+                    ref={(ref: DropdownForm) =>
+                      (this.DistanceDropdownRef = ref)
+                    }
+                    onChange={e => {
+                      this.setState({
+                        maxDistance: Number(e.target.value),
+                      });
+                    }}
                   />
                   <div className="flex justify-between text-xs">
                     <span>Found: 3 Party</span>
                     <a
-                      onClick={this.handleShowAll}
+                      onClick={this.handle_show_search_location}
                       className="text-red-500 underline"
                       href="#"
                     >
@@ -308,10 +404,55 @@ class Home extends React.Component<HomeProps, HomeState> {
                 </div>
               </DrawerContainer>
             )}
+            {/* Create Party */}
+            {menu == 'createparty' && (
+              <Transition
+                show={menu == 'createparty'}
+                enter="transition duration-200 ease-out "
+                enterFrom="transform translate-y-full "
+                enterTo="transform translate-y-0"
+                leave="transition duration-200 ease-out"
+                leaveFrom="transform translate-y-0"
+                leaveTo="transform translate-y-full"
+                as={React.Fragment}
+              >
+                <DrawerCreatePartyDiv className="h-[38vh]">
+                  <div className="pt-2 w-full flex flex-col gap-3">
+                    <div className=" cursor-pointer">
+                      <TextForm
+                        text="Location"
+                        value={
+                          this.state?.placeInfo?.formatted_address ??
+                          'Move the map to update location'
+                        }
+                      />
+                    </div>
+                    {this.check_valid_create_location() ? (
+                      <Button
+                        text="Create Party"
+                        primary
+                        onClick={() => router.push('/party/1')}
+                      />
+                    ) : (
+                      <Button
+                        text={'Please select location within 4km'}
+                        danger
+                        onClick={() => {}}
+                      />
+                    )}
 
+                    <Button
+                      text="Back"
+                      danger
+                      onClick={() => this.setState({ menu: 'main' })}
+                    />
+                  </div>
+                </DrawerCreatePartyDiv>
+              </Transition>
+            )}
             {/* Location Detail */}
             <Transition
-              show={isSelected}
+              show={isSelected && menu == 'selectparty'}
               enter="transition duration-200 ease-out "
               enterFrom="transform translate-y-full "
               enterTo="transform translate-y-0"
@@ -320,13 +461,15 @@ class Home extends React.Component<HomeProps, HomeState> {
               leaveTo="transform translate-y-full"
               as={React.Fragment}
             >
-              <DrawerContainerDiv className="h-[55vh]">
-                <div className="absolute transform w-20 h-20 p-2 bg-cream left-1/2 -translate-y-3/4 -translate-x-1/2  rounded-full">
-                  <img
-                    src="/meat.png"
-                    className="rounded-full border border-yellow"
-                  />
-                </div>
+              <DrawerPartyDiv>
+                {menu == 'selectparty' && (
+                  <div className="absolute transform w-20 h-20 p-2 bg-cream left-1/2 -translate-y-3/4 -translate-x-1/2  rounded-full">
+                    <img
+                      src="/meat.png"
+                      className="rounded-full border border-yellow"
+                    />
+                  </div>
+                )}
                 <div className="h-full flex flex-col overflow-y-auto container containerscroll">
                   <div className="flex flex-col justify-center items-center pt-6 pb-2 ">
                     <div className="text-2xl font-semibold">Hiw</div>
@@ -363,7 +506,7 @@ class Home extends React.Component<HomeProps, HomeState> {
                     </div>
                   </div>
                 </div>
-              </DrawerContainerDiv>
+              </DrawerPartyDiv>
             </Transition>
           </div>
         </div>
