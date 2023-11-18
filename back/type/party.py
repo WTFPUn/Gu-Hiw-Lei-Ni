@@ -12,10 +12,11 @@ class Party(BaseModel):
     budget: Literal["low", "medium", "high"]
     lat: float
     lng: float
-    place_id: str
+    place_id: Optional[str] = None
+    location: Optional[str] = None
     members: list[str] = []
     created_timestamp: datetime = datetime.now()
     status: Literal[
         "not_started", "in_progress", "finished", "cancelled"
     ] = "not_started"
-    # chat: Chat
+    chat: Optional[Chat] = None
