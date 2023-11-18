@@ -8,6 +8,7 @@ type TextFormProps = {
   required?: boolean;
   password?: boolean;
   name?: string;
+  value?: string;
 };
 
 type TextFormState = {
@@ -62,7 +63,7 @@ class TextForm extends React.Component<TextFormProps, TextFormState> {
         }
         required={this.props.required ? this.props.required : false}
         placeholder={this.props.placeholder ? this.props.placeholder : ''}
-        value={this.state.text}
+        value={this.props.value ?? this.state.text}
         name={this.props.name}
         onChange={e => {
           this.setState((state: TextFormState) => {
