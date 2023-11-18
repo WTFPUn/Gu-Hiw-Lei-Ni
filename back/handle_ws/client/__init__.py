@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import os
+import jwt
 from typing import Callable, List, Tuple, Set, ForwardRef
 from starlette.websockets import WebSocket
 from pydantic import BaseModel
 from typing import Dict, Union, Annotated, Literal, List
+from type.client_cookie import ClientCookie
 
 
 class SubscribeError(Exception):
@@ -31,6 +34,13 @@ class Client:
         self.token = token
         self.subscribe_service = set()
         self.callback = callback
+        self.token_data: ClientCookie = self._decode_token()
+
+    def _decode_token(self) -> ClientCookie:
+        data = jwt.decode(self.token, os.getenv("JWT_SECRET"), algorithms=["HS256"])
+        data = ClientCookie.model_validate(data)
+
+        return data
 
     def add_service(self, service: serviceType) -> bool:  # type: ignore
         """
