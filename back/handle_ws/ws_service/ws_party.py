@@ -83,6 +83,9 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
         list_party_channel: Channel = ("list_party",)
         self.pub_sub.register(list_party_channel, ListPartyPositionMessage())
 
+    async def __recover_data(self):
+        pass
+
     async def handle_ws(self, request: PartyHandlerRequest, client: Client) -> None:
         """
         Handle websocket request.
