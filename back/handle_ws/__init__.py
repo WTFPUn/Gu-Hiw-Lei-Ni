@@ -20,6 +20,10 @@ logger: Logger = Logger(__name__)
 from handle_ws.ws_service.ws_party import PartyHandlerRequest
 
 
+class HandleRequestError(Exception):
+    pass
+
+
 class Temp(BaseModel):
     type: Literal["temp"] = "temp"
     data: str
@@ -108,7 +112,10 @@ class WebSocketMultiplexer:
                 elif isinstance(request, WSRequest):
                     assert request.token in self.clients, "Client not connected"
                     client = self.clients[request.token]
-                    await self.handler[request.service].handle_ws(request.data, client)
+                    if not await self.handler[request.service].handle_ws(
+                        request.data, client
+                    ):
+                        raise HandleRequestError("handle request error")
                 elif isinstance(request, PubSubChannel):
                     if request.type == "sub":
                         self.clients[request.token].add_service(
@@ -136,6 +143,10 @@ class WebSocketMultiplexer:
                     self.logger.error("Invalid request type")
                     return
         except AssertionError as e:
+            await websocket.send_json({"type": "error", "data": str(e)})
+            await websocket.close()
+            return
+        except HandleRequestError as e:
             await websocket.send_json({"type": "error", "data": str(e)})
             await websocket.close()
             return
