@@ -4,10 +4,14 @@ import TextForm from '@/components/form/TextForm';
 import React from 'react';
 import Link from 'next/link';
 import ImageUploadForm from '@/components/form/ImageUploadForm';
+import { withRouter } from 'next/router';
+import { WithRouterProps } from '@/utils/router';
 
-export default class Register extends React.Component<{}, {}> {
+type RegisterProps = {} & WithRouterProps;
+
+class Register extends React.Component<RegisterProps, {}> {
   private formRef: React.RefObject<HTMLFormElement>;
-  constructor(props: {}) {
+  constructor(props: RegisterProps) {
     super(props);
     this.formRef = React.createRef();
   }
@@ -52,6 +56,7 @@ export default class Register extends React.Component<{}, {}> {
           throw Error('Cannot create new user: ' + text);
         }
         console.log(res);
+        this.props.router.push('/login');
       } catch (e: any) {
         alert(e.message);
       }
@@ -127,3 +132,5 @@ export default class Register extends React.Component<{}, {}> {
     );
   }
 }
+
+export default withRouter(Register);
