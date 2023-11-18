@@ -1,7 +1,7 @@
 import os
 import jwt
 from pydantic import BaseModel
-from starlette.responses import Response
+from starlette.responses import Response, JSONResponse
 
 
 from type.client_cookie import ClientCookie
@@ -22,4 +22,4 @@ class ValidateToken(HandleRequest[ValidateTokenRequest, None]):
         collection = self.mongo_client["GuHiw"]["User"]
         access_status = collection.find_one({"user_id": data.user_id})
 
-        return Response({"status": True if access_status else False})
+        return JSONResponse({"status": True if access_status else False})
