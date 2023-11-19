@@ -249,8 +249,8 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             current_party_id = current_party.party_id
 
             channel = "party", current_party_id
-            party: Party = self.pub_sub.channel_message[channel].data  # type: ignore
-            await client.callback.send_json({"data": party.model_dump_json()})
+            response: ResponseWs = self.pub_sub.channel_message[channel]  # type: ignore
+            await client.callback.send_json({"data": response.model_dump_json()})
             return True
 
         elif isinstance(request, SearchParty):
