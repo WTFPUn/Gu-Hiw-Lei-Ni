@@ -11,7 +11,8 @@ from pydantic import BaseModel, Field
 from typing import Literal, Union, Annotated, Dict, List
 import json
 
-from type.party import Party
+from type.User import User
+from type.party import Party, ReferenceParty
 from type.client_cookie import ClientCookie
 from type.ws.response_ws import ResponseWs
 
@@ -59,13 +60,21 @@ PartyHandlerRequest = Annotated[
     Field(discriminator="type"),
 ]
 
+
 class CurrentPartyResponse(ResponseWs):
-  type: Literal["current_party"] = "current_party"
-  data: UserPartyMessage
-  
+    type: Literal["current_party"] = "current_party"
+    data: UserPartyMessage
+
+
 class PartyResponse(ResponseWs):
-  type: Literal["party"] = "party"
-  data: Party
+    type: Literal["party"] = "party"
+    data: ReferenceParty
+
+
+class ListPartyResponse(ResponseWs):
+    type: Literal["list_party"] = "list_party"
+    data: ListPartyPositionMessage
+
 
 class UserPartyMessage(BaseModel):
     party_id: str
@@ -94,7 +103,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
         list_party_channel: Channel = ("list_party",)
         self.pub_sub.register(
             list_party_channel,
-            ResponseWs(type="list_party", data=ListPartyPositionMessage()),
+            ListPartyResponse(type="list_party", data=ListPartyPositionMessage()),
         )
 
     def __recover_data(self):
@@ -132,10 +141,24 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
 
             partydata = request.party
             partydata.id = str(uuid4())
+            party_host = self.mongo_client["GuHiw"]["User"].find_one(
+                {"id": partydata.host_id},
+            )
+            if party_host is None:
+                await client.callback.send_json(
+                    {"success": False, "message": "Host not found"}
+                )
+                return False
+
+            party_host = User.model_validate(party_host)
+
+            ref_party = ReferenceParty(
+                **partydata.model_dump(), members=[], host=party_host
+            )
             partydata.members.append(partydata.host_id)
             self.mongo_client["GuHiw"]["Party"].insert_one(request.party.model_dump())
             channel: Channel = "party", str(request.party.id)
-            self.pub_sub.register(channel, PartyResponse(type="party", data=request.party))
+            self.pub_sub.register(channel, PartyResponse(type="party", data=ref_party))
             self.pub_sub.subscribe(channel, client)
 
             channel: Channel = "current_party", client.token_data.user_id
@@ -157,7 +180,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
 
             await self.pub_sub.publish(
                 list_party_channel,
-                ResponseWs(type="list_party", data=current_list_party),
+                ListPartyResponse(type="list_party", data=current_list_party),
             )
             await client.callback.send_json(
                 {
@@ -171,9 +194,27 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
 
         elif isinstance(request, JoinPartyRequest):
             channel = "party", request.party_id
+            party: PartyResponse = self.pub_sub.channel_message[channel]  # type: ignore
+            size = party.data.size
+            if size >= len(party.data.members):
+                await client.callback.send_json(
+                    {"success": False, "message": "Party is full"}
+                )
+                return True
             self.pub_sub.subscribe(channel, client)
-
             user_id = client.token_data.user_id
+
+            user = self.mongo_client["GuHiw"]["User"].find_one({"id": user_id})
+            if user is None:
+                await client.callback.send_json(
+                    {"success": False, "message": "User not found"}
+                )
+                return False
+
+            user = User.model_validate(user)
+            party.data.members.append(user)
+
+            await self.pub_sub.publish(channel, party)
             access_status = self.mongo_client["GuHiw"]["Party"].find_one_and_update(
                 {"id": request.party_id}, {"$push": {"members": user_id}}
             )
@@ -187,7 +228,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                 channel: Channel = "current_party", client.token_data.user_id
                 self.pub_sub.register(
                     channel,
-                    ResponseWs(
+                    CurrentPartyResponse(
                         type="current_party",
                         data=UserPartyMessage(party_id=request.party_id),
                     ),
@@ -207,12 +248,12 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             data = ClientCookie.model_validate(data)
 
             user_id = data.user_id
-            if user_id != current_party.host_id:
+            if user_id != current_party.host_id:  # type: ignore
                 raise Exception("Only host can start party")
 
             current_party.status = "in_progress"
             await self.pub_sub.publish(
-                channel, ResponseWs(type="party", data=current_party)
+                channel, PartyResponse(type="party", data=current_party)  # type: ignore
             )
             self.mongo_client["GuHiw"]["Party"].find_one_and_update(
                 {"id": request.party_id}, {"$set": {"status": "in_progress"}}
@@ -258,7 +299,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             current_party_id = current_party.party_id
 
             channel = "party", current_party_id
-            response: ResponseWs = self.pub_sub.channel_message[channel]  # type: ignore
+            response: PartyResponse = self.pub_sub.channel_message[channel]  # type: ignore
             dump = json.loads(response.model_dump_json())
             await client.callback.send_json(dump)
             return True

@@ -41,5 +41,5 @@ class Party(BaseModel):
 
 
 class ReferenceParty(Party):
-    host_id: User
+    host: User
     members: list[User]
