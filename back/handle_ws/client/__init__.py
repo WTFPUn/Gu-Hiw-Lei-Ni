@@ -54,7 +54,7 @@ class Client:
         Add service to client.
         """
         if service in self.subscribe_service:
-            raise SubscribeError("Service already subscribe to client.")
+            return False
         self.subscribe_service.add(service)
         return True
 
@@ -63,6 +63,6 @@ class Client:
         Remove service from client.
         """
         if service not in self.subscribe_service:
-            raise SubscribeError("Service not subscribe to client.")
+            return False
         self.subscribe_service.remove(service)
         return True

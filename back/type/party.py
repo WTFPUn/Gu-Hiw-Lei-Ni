@@ -1,7 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from type.chat import Chat
 from type.User import User
-from typing import Literal, Optional, TypedDict
+from typing import Literal, Optional, TypedDict, ClassVar
 from datetime import datetime
 
 
@@ -41,5 +41,7 @@ class Party(BaseModel):
 
 
 class ReferenceParty(Party):
+    # excluude host_id
+    host_id: ClassVar[None] = None
     host: User
     members: list[User]

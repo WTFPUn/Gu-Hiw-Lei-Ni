@@ -153,8 +153,12 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
 
             party_host = User.model_validate(party_host)
 
+            copy_party = partydata.model_copy()
+            dumpb_copy_party = copy_party.model_dump(exclude={"members", "host_id"})
             ref_party = ReferenceParty(
-                **partydata.model_dump(), members=[], host=party_host
+                **dumpb_copy_party,
+                host=party_host,
+                members=[party_host],
             )
             partydata.members.append(partydata.host_id)
             self.mongo_client["GuHiw"]["Party"].insert_one(request.party.model_dump())
@@ -197,7 +201,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             channel = "party", request.party_id
             party: PartyResponse = self.pub_sub.channel_message[channel]  # type: ignore
             size = party.data.size
-            if size >= len(party.data.members):
+            if size <= len(party.data.members):
                 await client.callback.send_json(
                     {"success": False, "message": "Party is full"}
                 )
@@ -205,7 +209,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             self.pub_sub.subscribe(channel, client)
             user_id = client.token_data.user_id
 
-            user = self.mongo_client["GuHiw"]["User"].find_one({"id": user_id})
+            user = self.mongo_client["GuHiw"]["User"].find_one({"user_id": user_id})
             if user is None:
                 await client.callback.send_json(
                     {"success": False, "message": "User not found"}
@@ -213,6 +217,10 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                 return False
 
             user = User.model_validate(user)
+
+            copy_party = party.data.model_copy()
+            dumpb_copy_party = copy_party.model_dump(exclude={"members", "host_id"})
+
             party.data.members.append(user)
 
             await self.pub_sub.publish(channel, party)

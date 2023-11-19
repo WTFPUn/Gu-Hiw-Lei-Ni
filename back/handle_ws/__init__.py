@@ -156,7 +156,7 @@ class WebSocketMultiplexer:
             return
         except HandleRequestError as e:
             await websocket.send_json({"type": "error", "data": str(e)})
-            await websocket.close()
+            # await websocket.close()
             return
         except PubSubChannelError as e:
             await websocket.send_json({"type": "error", "data": str(e)})

@@ -4,7 +4,7 @@ from logging import Logger
 import logging
 from handle_ws.client import Client
 from type.ws.response_ws import ResponseWs
-
+import json
 from starlette.websockets import WebSocket
 
 
@@ -32,7 +32,7 @@ class PubSub:
         self.channel_message: Dict[Channel, ResponseWs] = {}
 
     # TODO: add main method
-    def register(self, channel: Channel, message: BaseModel):
+    def register(self, channel: Channel, message: ResponseWs):
         if channel not in self.subscribers:
             self.subscribers[channel] = set()
             self.channel_message[channel] = message
@@ -53,7 +53,7 @@ class PubSub:
             self.channel_message[channel] = message
             for subscriber in self.subscribers[channel]:
                 await subscriber.callback.send_json(
-                    self.channel_message[channel].model_dump_json()
+                    json.loads(self.channel_message[channel].model_dump_json())
                 )
         else:
             raise PubSubChannelError("Channel does not exist")
