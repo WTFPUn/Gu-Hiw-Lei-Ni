@@ -33,7 +33,7 @@ class ClosePartyRequest(BaseModel):
 
 class GetCurrentParty(BaseModel):
     type: Literal["get_current_party"] = "get_current_party"
-    party_id: str
+
 
 
 class SearchParty(BaseModel):
