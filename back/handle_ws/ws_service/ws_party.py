@@ -222,35 +222,6 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
         # request =  self.RequestType.
         return True
 
-            # set lat variable and set to 5 decimal point
-            in_radius_party = self.search_party_in_radius(request)
-            await client.callback.send_json({"parties": in_radius_party})
-
-        else:
-            # raise Exception("Unknown request type")
-            return False
-        # request =  self.RequestType.
-        return True
-
-            # set lat variable and set to 5 decimal point
-            in_radius_party = self.search_party_in_radius(request)
-            await client.callback.send_json({"parties": in_radius_party})
-
-        else:
-            # raise Exception("Unknown request type")
-            return False
-        # request =  self.RequestType.
-        return True
-
-            # set lat variable and set to 5 decimal point
-            in_radius_party = self.search_party_in_radius(request)
-            await client.callback.send_json({"parties": in_radius_party})
-
-        else:
-            # raise Exception("Unknown request type")
-            return False
-        # request =  self.RequestType.
-        return True
 
     def search_party_in_radius(self, request: SearchParty) -> List[str]:
         lat = round(request.lat, 5)
