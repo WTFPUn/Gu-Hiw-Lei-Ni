@@ -1,56 +1,231 @@
 import Button from '@/components/common/Button';
 import Layout from '@/components/common/Layout';
+import DropdownForm from '@/components/form/DropdownForm';
 import TextForm from '@/components/form/TextForm';
 import InfoTable from '@/components/party/InfoTable';
+import {
+  CreatePartyData,
+  PartyInfo,
+  PartySystemContext,
+  PartySystemContextType,
+} from '@/contexts/party';
+import { get_auth } from '@/utils/auth';
+import { calculateDistance } from '@/utils/map';
+import { Coords } from 'google-map-react';
 import { WithRouterProps } from 'next/dist/client/with-router';
 import { withRouter } from 'next/router';
 import React from 'react';
 
-class PartyDetail extends React.Component<WithRouterProps> {
+type CreatePartyState = {
+  currentLocation: Coords;
+  submitted: boolean;
+};
+
+type CreatePartyProps = {} & WithRouterProps;
+
+class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
+  private updateInterval: NodeJS.Timeout | null = null;
+  private formRef: React.RefObject<HTMLFormElement>;
+  static contextType?: React.Context<PartySystemContextType> =
+    PartySystemContext;
+  constructor(props: WithRouterProps) {
+    super(props);
+    this.state = {
+      currentLocation: {
+        lat: 0,
+        lng: 0,
+      },
+      submitted: false,
+    };
+    this.formRef = React.createRef();
+  }
+
+  async submitForm(e: React.SyntheticEvent) {
+    e.preventDefault();
+    const form = this.formRef.current;
+    if (!this.check_valid_create_location()) {
+      alert('You are too far away from the location');
+      return;
+    }
+
+    if (form && this.check_valid_create_location() && !this.state.submitted) {
+      const formData = new FormData(form);
+      const data = {
+        party_name: formData.get('partyname'),
+        description: formData.get('party description'),
+        location: formData.get('location'),
+        host_id: get_auth()?.user?.user_id,
+        budget: formData.get('price'),
+        size: formData.get('partysize'),
+        place_id: this.props.router.query.place_id as string,
+        lat: +(this.props.router.query.lat as string),
+        lng: +(this.props.router.query.lng as string),
+      };
+      try {
+        if (
+          data.party_name == '' ||
+          data.description == '' ||
+          data.location == '' ||
+          data.budget == '' ||
+          data.size == ''
+        ) {
+          throw Error('Please fill in all fields');
+        }
+        if (data?.size && !(+data?.size >= 2 && +data?.size <= 64)) {
+          throw Error('Party size must be between 2 and 64');
+        }
+        if (!confirm('Are you sure you want to create this party?')) return;
+        this.setState({ submitted: true });
+        const partySystem = this.context as PartySystemContextType;
+        const createData: CreatePartyData = {
+          type: 'create_party',
+          party: data as unknown as PartyInfo,
+        };
+        if (partySystem.send_msg && partySystem.fetch_current_party) {
+          console.log('sending create party');
+          partySystem.send_msg?.('ws', 'partyhandler', createData);
+          partySystem.fetch_current_party();
+
+          // TODO: redirect to party page when detect current party
+        }
+        console.log(createData);
+      } catch (e: any) {
+        alert(e.message);
+      }
+    }
+  }
+
+  update_current_location = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          console.log(position.coords);
+          this.setState({
+            currentLocation: {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            },
+          });
+        },
+        console.log,
+        { enableHighAccuracy: true },
+      );
+    }
+  };
+
+  check_valid_create_location = () => {
+    const { lat, lng } = this.props.router.query;
+    const { currentLocation } = this.state;
+    if (!currentLocation || !lat || !lng) return false;
+    const distance = calculateDistance(currentLocation, {
+      lat: +lat,
+      lng: +lng,
+    });
+    console.log(distance);
+    if (distance > 4) {
+      return false;
+    }
+    return true;
+  };
+
+  componentDidMount() {
+    if (navigator.geolocation) {
+      console.log('Geolocation is supported!');
+
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          console.log(position.coords);
+          this.updateInterval = setTimeout(this.update_current_location, 10000);
+
+          this.setState({
+            currentLocation: {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            },
+          });
+        },
+        console.log,
+        { enableHighAccuracy: true },
+      );
+    }
+  }
+
+  componentWillUnmount(): void {
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval);
+    }
+  }
+
   render() {
     const { router } = this.props;
+    const { lat, lng, place_id, address } = router.query;
 
+    if (router.isReady && (!lat || !lng || !place_id || !address)) {
+      router.push('/home');
+    }
+
+    console.log(router.query);
     return (
       <Layout type="party">
         <h1 className="text-3xl font-semibold pl-8 pt-24">Create Party</h1>
         <h2 className="text-2xl font-light text-light-gray pl-8 pt-2">
           And find someone to eat with!
         </h2>
-        <form className="flex flex-col justify-center align-middle items-center content-center">
+        <form
+          ref={this.formRef}
+          onSubmit={e => this.submitForm(e)}
+          className="flex flex-col justify-center align-middle items-center content-center"
+        >
           <div className="h-full pt-16 flex flex-col gap-4 w-3/4">
+            <TextForm
+              text="Location"
+              name="location"
+              value={address as string}
+            />
             <TextForm
               text="Party Name"
               placeholder="Enter name"
               required
-              name="firstName"
+              name="partyname"
             />
             <TextForm
-              text="Party Description"
-              placeholder="Enter description"
+              text="Description"
+              placeholder="Enter short description"
               required
-              name="lastName"
+              name="party description"
             />
-            <TextForm
-              text="Price"
-              placeholder="Enter Password"
+            <DropdownForm
+              text="Budget"
+              placeholder=""
               required
-              password
-              name="password"
+              name="price"
+              options={[
+                { text: '$', value: 'low' },
+                { text: '$$', value: 'medium' },
+                { text: '$$$', value: 'high' },
+              ]}
             />
             <TextForm
               text="Party Size"
-              placeholder="Enter Password"
+              placeholder="Enter number of people (including you)"
+              min={'2'}
+              max={'64'}
+              number
               required
-              password
-              name="confirmPassword"
+              name="partysize"
             />
           </div>
 
           <div className="py-24 flex flex-col w-3/4 justify-center content-center gap-2">
-            <div className="text-center font-normal">
-              {'Already have an account?   '}
-            </div>
-            <Button text="Sign up" primary />
+            {!this.state.submitted ? (
+              <Button
+                text="Create Party"
+                primary
+                onClick={e => this.submitForm(e)}
+              />
+            ) : (
+              <Button text="Please Wait" onClick={e => {}} />
+            )}
           </div>
         </form>
       </Layout>
@@ -58,4 +233,4 @@ class PartyDetail extends React.Component<WithRouterProps> {
   }
 }
 
-export default withRouter(PartyDetail);
+export default withRouter(CreateParty);

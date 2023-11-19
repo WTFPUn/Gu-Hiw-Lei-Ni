@@ -1,10 +1,10 @@
 import { check_if_auth, get_auth } from '@/utils/auth';
 import { Coords } from 'google-map-react';
 import React, { useMemo } from 'react';
-import useWebSocket from 'react-use-websocket';
+import useWebSocket, { ReadyState } from 'react-use-websocket';
 
 export type PartyInfo = {
-  name: string;
+  party_name: string;
   host_id?: string;
   description: string;
   lat: number;
@@ -29,19 +29,21 @@ export type PartySystemContextType = {
   currentPartyInfo: PartyInfo | null;
   lastJsonMessage?: any;
   send_msg?: MessageSender;
+  fetch_current_party?: () => void;
 };
 
 export const PartySystemContext = React.createContext<PartySystemContextType>({
   currentPartyInfo: null,
   send_msg: (type: string, service: string | null, data: object) => {},
+  fetch_current_party: () => {},
 });
 
-interface JoinPartyData {
+export interface JoinPartyData {
   type: 'join_party';
   party_id: string;
 }
 
-interface CreatePartyData {
+export interface CreatePartyData {
   type: 'create_party';
   party: PartyInfo;
 }
@@ -52,7 +54,6 @@ interface CreatePartyData {
  * and be able to facilitate the change of the current party info and handle notification state
  * using websockets
  *
- * @todo implement websocket connection and to the frontend
  * @todo implement fetching of party info
  * @todo implement the notification state
  *
@@ -80,21 +81,19 @@ export default function PartySystemProvider({
   const [systemState, setSystemState] = React.useState<PartySystemContextType>({
     currentPartyInfo: null,
   });
+
   const handle_socket_open = () => {
     if (check_if_auth()) send('ws_connect', null, {});
-  };
-
-  const handle_token_change = () => {
-    handle_socket_open();
   };
 
   const handle_socket_message = () => {
     const message = lastJsonMessage as any;
     // if message is null or undefined or invalid
     if (!message?.type) {
+      console.log('unhandled message', message);
       return;
     }
-
+    console.log('message', message);
     if (message.type == 'success' && message?.data == 'connected') {
       console.log('successfully authenticated websocket');
     } else if (message.type == 'ws') {
@@ -130,6 +129,11 @@ export default function PartySystemProvider({
     });
   };
 
+  const fetch_current_party_info = () => {
+    console.log('fetching current party info');
+    send('ws', 'partyhandler', { type: 'get_current_party' });
+  };
+
   React.useEffect(() => {
     handle_socket_message();
   }, [lastJsonMessage]);
@@ -139,15 +143,27 @@ export default function PartySystemProvider({
     setSystemState(state => {
       return { ...state, set_current_party: setParty, send_msg: send };
     });
-    window.addEventListener('tokenChange', handle_token_change);
+    window.addEventListener('tokenChange', handle_socket_open);
     return () => {
-      window.removeEventListener('tokenChange', handle_token_change);
+      window.removeEventListener('tokenChange', handle_socket_open);
     };
   }, []);
 
   const value = useMemo(() => {
-    return { ...systemState, lastJsonMessage, send_msg: send };
-  }, [systemState, lastJsonMessage]);
+    const messenger =
+      readyState == ReadyState.OPEN
+        ? {
+            send_msg: send,
+            fetch_current_party: fetch_current_party_info,
+          }
+        : {};
+
+    return {
+      ...systemState,
+      lastJsonMessage,
+      ...messenger,
+    };
+  }, [systemState, lastJsonMessage, readyState]);
 
   return (
     <PartySystemContext.Provider value={value}>
