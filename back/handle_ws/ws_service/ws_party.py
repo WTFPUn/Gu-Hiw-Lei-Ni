@@ -142,7 +142,8 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             partydata = request.party
             partydata.id = str(uuid4())
             party_host = self.mongo_client["GuHiw"]["User"].find_one(
-                {"id": partydata.host_id},
+                {"user_id": partydata.host_id},
+                {"_id": False},
             )
             if party_host is None:
                 await client.callback.send_json(
