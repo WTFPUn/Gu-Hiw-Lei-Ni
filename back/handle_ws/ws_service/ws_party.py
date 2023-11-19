@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 import jwt
 import asyncio
@@ -8,6 +9,7 @@ from handle_ws.client import Client
 from handle_ws.ws_service import WebSocketService
 from pydantic import BaseModel, Field
 from typing import Literal, Union, Annotated, Dict, List
+import json
 
 from type.party import Party
 from type.client_cookie import ClientCookie
@@ -57,6 +59,13 @@ PartyHandlerRequest = Annotated[
     Field(discriminator="type"),
 ]
 
+class CurrentPartyResponse(ResponseWs):
+  type: Literal["current_party"] = "current_party"
+  data: UserPartyMessage
+  
+class PartyResponse(ResponseWs):
+  type: Literal["party"] = "party"
+  data: Party
 
 class UserPartyMessage(BaseModel):
     party_id: str
@@ -126,13 +135,13 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             partydata.members.append(partydata.host_id)
             self.mongo_client["GuHiw"]["Party"].insert_one(request.party.model_dump())
             channel: Channel = "party", str(request.party.id)
-            self.pub_sub.register(channel, ResponseWs(type="party", data=request.party))
+            self.pub_sub.register(channel, PartyResponse(type="party", data=request.party))
             self.pub_sub.subscribe(channel, client)
 
             channel: Channel = "current_party", client.token_data.user_id
             self.pub_sub.register(
                 channel,
-                ResponseWs(
+                CurrentPartyResponse(
                     type="current_party", data=UserPartyMessage(party_id=partydata.id)
                 ),
             )
@@ -250,7 +259,8 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
 
             channel = "party", current_party_id
             response: ResponseWs = self.pub_sub.channel_message[channel]  # type: ignore
-            await client.callback.send_json({"data": response.model_dump_json()})
+            dump = json.loads(response.model_dump_json())
+            await client.callback.send_json(dump)
             return True
 
         elif isinstance(request, SearchParty):
