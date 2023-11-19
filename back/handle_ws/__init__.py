@@ -93,19 +93,20 @@ class WebSocketMultiplexer:
 
                 # get client from request
                 if isinstance(request, WSConnectRequest):
+                    tokendata = Client.decode_token(request.token)
                     if request.token in self.clients:
                         # check if client is in closed state, set websocket to new websocket
                         if (
                             self.clients[request.token].callback.client_state
                             == WebSocketState.DISCONNECTED
                         ):
-                            self.clients[request.token].callback = websocket
+                            self.clients[tokendata.user_id].callback = websocket
                             await websocket.send_json(
                                 {"type": "success", "data": "reconnected"}
                             )
                     else:
                         client = Client(request.token, websocket)
-                        self.clients[request.token] = client
+                        self.clients[client.token_data.user_id] = client
                     # verify token is valid
                     # implement laters
 

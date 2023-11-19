@@ -42,6 +42,13 @@ class Client:
 
         return data
 
+    @staticmethod
+    def decode_token(token) -> ClientCookie:
+        data = jwt.decode(token, os.getenv("JWT_SECRET"), algorithms=["HS256"])
+        data = ClientCookie.model_validate(data)
+
+        return data
+
     def add_service(self, service: serviceType) -> bool:  # type: ignore
         """
         Add service to client.
