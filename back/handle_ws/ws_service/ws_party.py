@@ -261,6 +261,10 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
         # request =  self.RequestType.
         return True
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 31bcd1b7dc9c94af9947eeb45e7a5e4838b3506b
     def search_party_in_radius(self, request: SearchParty) -> List[str]:
         lat = round(request.lat, 5)
         lng = round(request.lng, 5)
