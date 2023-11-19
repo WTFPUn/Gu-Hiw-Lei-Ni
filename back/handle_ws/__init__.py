@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, TypeAdapter
 from pymongo import MongoClient
 from logging import Logger
 import logging
+import json
 from starlette.websockets import WebSocketState
 
 from starlette.websockets import WebSocket
@@ -134,9 +135,11 @@ class WebSocketMultiplexer:
                         await websocket.send_json(
                             {
                                 "type": "success",
-                                "data": self.handler[request.service]
-                                .pub_sub.channel_message[request.channel]
-                                .model_dump_json(),
+                                "data": json.loads(
+                                    self.handler[request.service]
+                                    .pub_sub.channel_message[request.channel]
+                                    .model_dump_json()
+                                ),
                             }
                         )
                     else:
