@@ -3,6 +3,7 @@ from typing import List, Set, Dict, Callable, Any, TypeVar, Generic, Coroutine, 
 from logging import Logger
 import logging
 from handle_ws.client import Client
+from type.ws.response_ws import ResponseWs
 
 from starlette.websockets import WebSocket
 
@@ -28,7 +29,7 @@ class PubSubChannelError(Exception):
 class PubSub:
     def __init__(self) -> None:
         self.subscribers: Dict[Channel, Set[Client]] = {}
-        self.channel_message: Dict[Channel, BaseModel] = {}
+        self.channel_message: Dict[Channel, ResponseWs] = {}
 
     # TODO: add main method
     def register(self, channel: Channel, message: BaseModel):
