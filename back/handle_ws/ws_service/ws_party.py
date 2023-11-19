@@ -83,7 +83,10 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
         super().__init__()
 
         list_party_channel: Channel = ("list_party",)
-        self.pub_sub.register(list_party_channel, ListPartyPositionMessage())
+        self.pub_sub.register(
+            list_party_channel,
+            ResponseWs(type="list_party", data=ListPartyPositionMessage()),
+        )
 
     def __recover_data(self):
         pass
@@ -261,10 +264,6 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
         # request =  self.RequestType.
         return True
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 31bcd1b7dc9c94af9947eeb45e7a5e4838b3506b
     def search_party_in_radius(self, request: SearchParty) -> List[str]:
         lat = round(request.lat, 5)
         lng = round(request.lng, 5)

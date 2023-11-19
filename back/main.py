@@ -20,6 +20,9 @@ MONGO_URL = os.getenv("MONGO_URL")
 logging: Logger = Logger(__name__)
 logging.setLevel(0)
 
+# create event loop
+loop = asyncio.get_event_loop()
+
 
 async def main() -> None:
     # init app

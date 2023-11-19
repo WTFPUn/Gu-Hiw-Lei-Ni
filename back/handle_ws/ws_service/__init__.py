@@ -23,7 +23,7 @@ class WebSocketService(ABC, Generic[WsRequest]):
         self.mongo_client = mongo_client
 
     @abstractmethod
-    async def handle_ws(self, request: WsRequest, client: Client) -> None:
+    async def handle_ws(self, request: WsRequest, client: Client) -> bool:
         """
         Handle websocket request.
         """
@@ -31,3 +31,7 @@ class WebSocketService(ABC, Generic[WsRequest]):
 
     def __str__(self) -> str:
         return self.__class__.__name__
+
+    @abstractmethod
+    async def __recover_data(self):
+        pass
