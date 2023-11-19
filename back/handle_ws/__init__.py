@@ -94,10 +94,10 @@ class WebSocketMultiplexer:
                 # get client from request
                 if isinstance(request, WSConnectRequest):
                     tokendata = Client.decode_token(request.token)
-                    if request.token in self.clients:
+                    if tokendata.user_id in self.clients:
                         # check if client is in closed state, set websocket to new websocket
                         if (
-                            self.clients[request.token].callback.client_state
+                            self.clients[tokendata.user_id].callback.client_state
                             == WebSocketState.DISCONNECTED
                         ):
                             self.clients[tokendata.user_id].callback = websocket
@@ -112,19 +112,22 @@ class WebSocketMultiplexer:
 
                     await websocket.send_json({"type": "success", "data": "connected"})
                 elif isinstance(request, WSRequest):
-                    assert request.token in self.clients, "Client not connected"
-                    client = self.clients[request.token]
+                    tokendata = Client.decode_token(request.token)
+                    assert tokendata.user_id in self.clients, "Client not connected"
+                    client = self.clients[tokendata.user_id]
                     if not await self.handler[request.service].handle_ws(
                         request.data, client
                     ):
                         raise HandleRequestError("handle request error")
                 elif isinstance(request, PubSubChannel):
+                    tokendata = Client.decode_token(request.token)
+                    assert tokendata.user_id in self.clients, "Client not connected"
                     if request.type == "sub":
-                        self.clients[request.token].add_service(
+                        self.clients[tokendata.user_id].add_service(
                             (self.handler[request.service].pub_sub, request.channel)
                         )
                     elif request.type == "unsub":
-                        self.clients[request.token].remove_service(
+                        self.clients[tokendata.user_id].remove_service(
                             (self.handler[request.service].pub_sub, request.channel)
                         )
                     elif request.type == "get":
