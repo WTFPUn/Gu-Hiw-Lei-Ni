@@ -6,6 +6,7 @@ from datetime import datetime
 
 class Party(BaseModel):
     id: Optional[str] = None
+    party_name: str
     size: int
     description: str
     host_id: str
