@@ -1,14 +1,17 @@
 import os
 import jwt
+import asyncio
+from uuid import uuid4
+from math import sqrt, pi, cos, asin
 from pub_sub import Channel
 from handle_ws.client import Client
 from handle_ws.ws_service import WebSocketService
 from pydantic import BaseModel, Field
 from typing import Literal, Union, Annotated, Dict, List
+
 from type.party import Party
 from type.client_cookie import ClientCookie
-from uuid import uuid4
-from math import sqrt
+from type.ws.response_ws import ResponseWs
 
 
 class CreatePartyRequest(BaseModel):
@@ -33,7 +36,6 @@ class ClosePartyRequest(BaseModel):
 
 class GetCurrentParty(BaseModel):
     type: Literal["get_current_party"] = "get_current_party"
-
 
 
 class SearchParty(BaseModel):
@@ -83,6 +85,24 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
         list_party_channel: Channel = ("list_party",)
         self.pub_sub.register(list_party_channel, ListPartyPositionMessage())
 
+    def __recover_data(self):
+        pass
+
+    def __calculate_distance(
+        self, p1_lat: float, p1_lng: float, p2_lat: float, p2_lng: float
+    ) -> float:
+        R = 6371
+        dLat = ((p2_lat - p1_lat) * pi) / 180
+        dLon = ((p2_lng - p1_lng) * pi) / 180
+        a = (
+            0.5
+            - cos(dLat) / 2
+            + (cos((p1_lat * pi) / 180) * cos((p2_lat * pi) / 180) * (1 - cos(dLon)))
+            / 2
+        )
+
+        return R * 2 * asin(sqrt(a))
+
     async def handle_ws(self, request: PartyHandlerRequest, client: Client) -> bool:
         """
         Handle websocket request.
@@ -103,11 +123,16 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             partydata.members.append(partydata.host_id)
             self.mongo_client["GuHiw"]["Party"].insert_one(request.party.model_dump())
             channel: Channel = "party", str(request.party.id)
-            self.pub_sub.register(channel, request.party)
+            self.pub_sub.register(channel, ResponseWs(type="party", data=request.party))
             self.pub_sub.subscribe(channel, client)
 
             channel: Channel = "current_party", client.token_data.user_id
-            self.pub_sub.register(channel, UserPartyMessage(party_id=partydata.id))
+            self.pub_sub.register(
+                channel,
+                ResponseWs(
+                    type="current_party", data=UserPartyMessage(party_id=partydata.id)
+                ),
+            )
             self.pub_sub.subscribe(channel, client)
 
             party_position = PartyPositionMessage(
@@ -115,10 +140,13 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             )
             list_party_channel: Channel = ("list_party",)
 
-            current_list_party: ListPartyPositionMessage = self.pub_sub.channel_message[list_party_channel]  # type: ignore
+            current_list_party: ListPartyPositionMessage = self.pub_sub.channel_message[list_party_channel].data  # type: ignore
             current_list_party.list_party[partydata.id] = party_position
 
-            await self.pub_sub.publish(list_party_channel, current_list_party)
+            await self.pub_sub.publish(
+                list_party_channel,
+                ResponseWs(type="list_party", data=current_list_party),
+            )
             await client.callback.send_json(
                 {
                     "success": True,
@@ -146,7 +174,11 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             else:
                 channel: Channel = "current_party", client.token_data.user_id
                 self.pub_sub.register(
-                    channel, UserPartyMessage(party_id=request.party_id)
+                    channel,
+                    ResponseWs(
+                        type="current_party",
+                        data=UserPartyMessage(party_id=request.party_id),
+                    ),
                 )
                 self.pub_sub.subscribe(channel, client)
 
@@ -156,7 +188,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
 
         elif isinstance(request, StartPartyRequest):
             channel = "party", request.party_id
-            current_party: Party = self.pub_sub.channel_message[channel]  # type: ignore
+            current_party: Party = self.pub_sub.channel_message[channel].data  # type: ignore
             data = jwt.decode(
                 client.token, os.getenv("JWT_SECRET"), algorithms=["HS256"]
             )
@@ -167,13 +199,15 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                 raise Exception("Only host can start party")
 
             current_party.status = "in_progress"
-            await self.pub_sub.publish(channel, current_party)
+            await self.pub_sub.publish(
+                channel, ResponseWs(type="party", data=current_party)
+            )
             self.mongo_client["GuHiw"]["Party"].find_one_and_update(
                 {"id": request.party_id}, {"$set": {"status": "in_progress"}}
             )
         elif isinstance(request, ClosePartyRequest):
             channel = "party", request.party_id
-            current_party: Party = self.pub_sub.channel_message[channel]  # type: ignore
+            current_party: Party = self.pub_sub.channel_message[channel].data  # type: ignore
             user_id = client.token_data.user_id
             if user_id != current_party.host_id:
                 raise Exception("Only host can close party")
@@ -203,45 +237,20 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
 
         elif isinstance(request, GetCurrentParty):
             channel = "current_party", client.token_data.user_id
-            current_party: UserPartyMessage = self.pub_sub.channel_message[channel]  # type: ignore
+            if channel not in self.pub_sub.channel_message[channel]:
+                await client.callback.send_json(
+                    {"success": False, "message": "User is not currently in party"}
+                )
+                return True
+            current_party: UserPartyMessage = self.pub_sub.channel_message[channel].data  # type: ignore
             current_party_id = current_party.party_id
 
             channel = "party", current_party_id
-            party: Party = self.pub_sub.channel_message[channel]  # type: ignore
+            party: Party = self.pub_sub.channel_message[channel].data  # type: ignore
             await client.callback.send_json({"data": party.model_dump_json()})
             return True
 
         elif isinstance(request, SearchParty):
-            # set lat variable and set to 5 decimal point
-            in_radius_party = self.search_party_in_radius(request)
-            await client.callback.send_json({"parties": in_radius_party})
-
-        else:
-            # raise Exception("Unknown request type")
-            return False
-        # request =  self.RequestType.
-        return True
-
-            # set lat variable and set to 5 decimal point
-            in_radius_party = self.search_party_in_radius(request)
-            await client.callback.send_json({"parties": in_radius_party})
-
-        else:
-            # raise Exception("Unknown request type")
-            return False
-        # request =  self.RequestType.
-        return True
-
-            # set lat variable and set to 5 decimal point
-            in_radius_party = self.search_party_in_radius(request)
-            await client.callback.send_json({"parties": in_radius_party})
-
-        else:
-            # raise Exception("Unknown request type")
-            return False
-        # request =  self.RequestType.
-        return True
-
             # set lat variable and set to 5 decimal point
             in_radius_party = self.search_party_in_radius(request)
             await client.callback.send_json({"parties": in_radius_party})
@@ -258,13 +267,13 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
 
         items: List[str] = []
 
-        list_party = self.pub_sub.channel_message[("list_party",)].list_party  # type: ignore
+        list_party = self.pub_sub.channel_message[("list_party",)].data.list_party  # type: ignore
 
         if isinstance(list_party, ListPartyPositionMessage):
             for party_id, party_info in list_party.list_party.items():
-                iter_lat = party_info.lat
-                iter_lng = party_info.lng
-                dist = sqrt((lat - iter_lat) ** 2 + (lng - iter_lng) ** 2)
+                dist = self.__calculate_distance(
+                    lat, lng, party_info.lat, party_info.lng
+                )
                 if dist < request.radius:
                     party: Party = self.pub_sub.get(("party", party_id))  # type: ignore
                     items.append(party.model_dump_json())
