@@ -240,7 +240,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
 
         elif isinstance(request, GetCurrentParty):
             channel = "current_party", client.token_data.user_id
-            if channel not in self.pub_sub.channel_message[channel]:
+            if channel not in self.pub_sub.channel_message:
                 await client.callback.send_json(
                     {"success": False, "message": "User is not currently in party"}
                 )

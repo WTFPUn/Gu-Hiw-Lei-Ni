@@ -32,6 +32,6 @@ class WebSocketService(ABC, Generic[WsRequest]):
     def __str__(self) -> str:
         return self.__class__.__name__
 
-    @abstractmethod
-    async def __recover_data(self):
-        pass
+    # @abstractmethod
+    # async def __recover_data(self):
+    #     pass
