@@ -10,6 +10,7 @@ from starlette.websockets import WebSocketState
 
 from starlette.websockets import WebSocket
 from starlette.endpoints import WebSocketEndpoint
+from pub_sub import PubSubChannelError
 
 logging.basicConfig(level=logging.NOTSET)
 
@@ -149,6 +150,9 @@ class WebSocketMultiplexer:
         except HandleRequestError as e:
             await websocket.send_json({"type": "error", "data": str(e)})
             await websocket.close()
+            return
+        except PubSubChannelError as e:
+            await websocket.send_json({"type": "error", "data": str(e)})
             return
         except Exception as e:
             print(e)

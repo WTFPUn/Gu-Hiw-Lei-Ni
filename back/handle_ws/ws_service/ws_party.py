@@ -83,10 +83,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
         list_party_channel: Channel = ("list_party",)
         self.pub_sub.register(list_party_channel, ListPartyPositionMessage())
 
-    async def __recover_data(self):
-        pass
-
-    async def handle_ws(self, request: PartyHandlerRequest, client: Client) -> None:
+    async def handle_ws(self, request: PartyHandlerRequest, client: Client) -> bool:
         """
         Handle websocket request.
         """
@@ -94,6 +91,13 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             raise Exception("Mongo client is not set")
 
         if isinstance(request, CreatePartyRequest):
+            channel: Channel = "current_party", client.token_data.user_id
+            if channel in self.pub_sub.subscribers:
+                await client.callback.send_json(
+                    {"success": False, "message": "User already in party"}
+                )
+                return True
+
             partydata = request.party
             partydata.id = str(uuid4())
             partydata.members.append(partydata.host_id)
@@ -205,6 +209,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             channel = "party", current_party_id
             party: Party = self.pub_sub.channel_message[channel]  # type: ignore
             await client.callback.send_json({"data": party.model_dump_json()})
+            return True
 
         elif isinstance(request, SearchParty):
             # set lat variable and set to 5 decimal point
@@ -212,8 +217,40 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             await client.callback.send_json({"parties": in_radius_party})
 
         else:
-            raise Exception("Unknown request type")
+            # raise Exception("Unknown request type")
+            return False
         # request =  self.RequestType.
+        return True
+
+            # set lat variable and set to 5 decimal point
+            in_radius_party = self.search_party_in_radius(request)
+            await client.callback.send_json({"parties": in_radius_party})
+
+        else:
+            # raise Exception("Unknown request type")
+            return False
+        # request =  self.RequestType.
+        return True
+
+            # set lat variable and set to 5 decimal point
+            in_radius_party = self.search_party_in_radius(request)
+            await client.callback.send_json({"parties": in_radius_party})
+
+        else:
+            # raise Exception("Unknown request type")
+            return False
+        # request =  self.RequestType.
+        return True
+
+            # set lat variable and set to 5 decimal point
+            in_radius_party = self.search_party_in_radius(request)
+            await client.callback.send_json({"parties": in_radius_party})
+
+        else:
+            # raise Exception("Unknown request type")
+            return False
+        # request =  self.RequestType.
+        return True
 
     def search_party_in_radius(self, request: SearchParty) -> List[str]:
         lat = round(request.lat, 5)
