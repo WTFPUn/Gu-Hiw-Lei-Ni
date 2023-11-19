@@ -115,6 +115,13 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             current_list_party.list_party[partydata.id] = party_position
 
             await self.pub_sub.publish(list_party_channel, current_list_party)
+            await client.callback.send_json(
+                {
+                    "success": True,
+                    "message": "Successfully created party",
+                    "party_id": partydata.id,
+                }
+            )
 
             # Find placeID
 
