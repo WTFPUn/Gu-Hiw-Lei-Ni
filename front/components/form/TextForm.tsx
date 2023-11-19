@@ -9,6 +9,9 @@ type TextFormProps = {
   password?: boolean;
   name?: string;
   value?: string;
+  min?: string;
+  max?: string;
+  number?: boolean;
 };
 
 type TextFormState = {
@@ -56,7 +59,13 @@ class TextForm extends React.Component<TextFormProps, TextFormState> {
     elems.push(
       <input
         key={'input' + this.props.text}
-        type={this.props.password ? 'password' : 'text'}
+        type={
+          this.props.password
+            ? 'password'
+            : this.props.number
+            ? 'number'
+            : 'text'
+        }
         className={
           'border-2 border-secondary bg-transparent placeholder:text-light-gray rounded-xl px-4 py-3 mt-2  ' +
           (this.props.width ? this.props.width + ' ' : '')
@@ -65,6 +74,8 @@ class TextForm extends React.Component<TextFormProps, TextFormState> {
         placeholder={this.props.placeholder ? this.props.placeholder : ''}
         value={this.props.value ?? this.state.text}
         name={this.props.name}
+        min={this.props.min}
+        max={this.props.max}
         onChange={e => {
           this.setState((state: TextFormState) => {
             const newState: TextFormState = {

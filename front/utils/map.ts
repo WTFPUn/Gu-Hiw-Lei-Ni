@@ -11,6 +11,12 @@ export const testLocations = [
   },
 ];
 
+/**
+ * Calculates the distance between two coordinates using the Haversine formula.
+ * @param p1 The first coordinate.
+ * @param p2 The second coordinate.
+ * @returns The distance between the two coordinates in kilometers.
+ */
 export function calculateDistance(p1: Coords, p2: Coords) {
   // calculate distance between two points
   const R = 6371; // km
@@ -27,8 +33,15 @@ export function calculateDistance(p1: Coords, p2: Coords) {
   return R * 2 * Math.asin(Math.sqrt(a));
 }
 
+/**
+ * Finds the nearest place information from the Google Places API based on the given coordinates.
+ * @param p - The coordinates (latitude and longitude) of the location.
+ * @returns A Promise that resolves to an array of place results, or null if an error occurs.
+ */
 export async function find_place_info(p: Coords) {
   // find nearest place info from google place api
+  // https://developers.google.com/maps/documentation/javascript/geocoding
+  // https://developers.google.com/maps/documentation/geocoding/overview
   try {
     const api_link = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${p.lat},${p.lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_API_KEY}&enable_address_descriptor=true`;
     const req = await fetch(api_link, {
@@ -47,7 +60,13 @@ export async function find_place_info(p: Coords) {
 
 let timer: NodeJS.Timeout;
 
-export const debounce = (func: (...args: any[]) => void, delay = 1000) => {
+/**
+ * Debounces the execution of a function.
+ * @param func - The function to be debounced.
+ * @param delay - The delay in milliseconds before the function is executed.
+ * @returns A debounced version of the function.
+ */
+export const debounceApi = (func: (...args: any[]) => void, delay = 1000) => {
   // Declare a variable called 'timer' to store the timer ID
 
   // Return an anonymous function that takes in any number of arguments

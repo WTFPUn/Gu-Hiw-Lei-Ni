@@ -18,7 +18,7 @@ import IconButton from '@/components/common/IconButton';
 import PartyList, { PartyItem } from '@/components/party/PartyList';
 import {
   calculateDistance,
-  debounce,
+  debounceApi,
   find_place_info,
   testLocations,
 } from '@/utils/map';
@@ -159,7 +159,7 @@ class Home extends React.Component<HomeProps, HomeState> {
         lat: centerLat,
         lng: centerLng,
       };
-      debounce(this.handle_select_create_location() as any, 5000);
+      debounceApi(this.handle_select_create_location() as any, 5000);
 
       this.set_current_position({ zoom, center });
     });
@@ -201,8 +201,15 @@ class Home extends React.Component<HomeProps, HomeState> {
 
   render() {
     const { router, auth_status, user } = this.props;
-    const { selectedMarker, currentLocation, center, zoom, menu, maxDistance } =
-      this.state;
+    const {
+      selectedMarker,
+      currentLocation,
+      center,
+      zoom,
+      menu,
+      maxDistance,
+      placeInfo,
+    } = this.state;
     const isSelected = selectedMarker !== null;
 
     const { w, h } = meters2ScreenPixels(
@@ -259,7 +266,7 @@ class Home extends React.Component<HomeProps, HomeState> {
                       width: w,
                       height: h,
                     }}
-                    className="bg-[#F8B401] opacity-20 rounded-full shadow-2xl border-2 border-white translate-x-[-25%] translate-y-[-25%]"
+                    className="bg-[#F8B401] opacity-10 rounded-full shadow-2xl border-2 border-white translate-x-[-25%] translate-y-[-25%]"
                   />
                 </Marker>
               )}
@@ -327,7 +334,7 @@ class Home extends React.Component<HomeProps, HomeState> {
                 )}
               >
                 <div className="pb-4 flex justify-center gap-6">
-                  <IconButton img={'/magnifyingglass.png'} text="Matchmaking" />
+                  {/* <IconButton img={'/magnifyingglass.png'} text="Matchmaking" /> */}
                   <IconButton
                     img={'/sushiroll.png'}
                     text="Current Party"
@@ -422,16 +429,26 @@ class Home extends React.Component<HomeProps, HomeState> {
                       <TextForm
                         text="Location"
                         value={
-                          this.state?.placeInfo?.formatted_address ??
+                          placeInfo?.formatted_address ??
                           'Move the map to update location'
                         }
                       />
                     </div>
-                    {this.check_valid_create_location() ? (
+                    {this.check_valid_create_location() && placeInfo ? (
                       <Button
                         text="Create Party"
                         primary
-                        onClick={() => router.push('/party/1')}
+                        onClick={() => {
+                          router.push(
+                            `/createparty?lat=${center?.lat}&lng=${
+                              center?.lng
+                            }&place_id=${
+                              placeInfo.place_id
+                            }&address=${encodeURIComponent(
+                              placeInfo.formatted_address,
+                            )}`,
+                          );
+                        }}
                       />
                     ) : (
                       <Button
@@ -451,63 +468,65 @@ class Home extends React.Component<HomeProps, HomeState> {
               </Transition>
             )}
             {/* Location Detail */}
-            <Transition
-              show={isSelected && menu == 'selectparty'}
-              enter="transition duration-200 ease-out "
-              enterFrom="transform translate-y-full "
-              enterTo="transform translate-y-0"
-              leave="transition duration-200 ease-out"
-              leaveFrom="transform translate-y-0"
-              leaveTo="transform translate-y-full"
-              as={React.Fragment}
-            >
-              <DrawerPartyDiv>
-                {menu == 'selectparty' && (
-                  <div className="absolute transform w-20 h-20 p-2 bg-cream left-1/2 -translate-y-3/4 -translate-x-1/2  rounded-full">
-                    <img
-                      src="/meat.png"
-                      className="rounded-full border border-yellow"
-                    />
-                  </div>
-                )}
-                <div className="h-full flex flex-col overflow-y-auto container containerscroll">
-                  <div className="flex flex-col justify-center items-center pt-6 pb-2 ">
-                    <div className="text-2xl font-semibold">Hiw</div>
-                    <div className="text-lg text-light-gray">Hiw</div>
-                  </div>
-                  <div className="h-full">
-                    <hr className="text-primary font-medium" />
-                    <InfoTable
-                      partyInfo={{
-                        location: 'location',
-                        description: 'description',
-                        distance: 1,
-                        price: 1,
-                        partySize: 1,
-                        host: {
-                          img: 'img',
-                          name: 'name',
-                        },
-                        members: [
-                          {
+            {menu == 'selectparty' && (
+              <Transition
+                show={isSelected && menu == 'selectparty'}
+                enter="transition duration-200 ease-out "
+                enterFrom="transform translate-y-full "
+                enterTo="transform translate-y-0"
+                leave="transition duration-200 ease-out"
+                leaveFrom="transform translate-y-0"
+                leaveTo="transform translate-y-full"
+                as={React.Fragment}
+              >
+                <DrawerPartyDiv>
+                  {menu == 'selectparty' && (
+                    <div className="absolute transform w-20 h-20 p-2 bg-cream left-1/2 -translate-y-3/4 -translate-x-1/2  rounded-full">
+                      <img
+                        src="/meat.png"
+                        className="rounded-full border border-yellow"
+                      />
+                    </div>
+                  )}
+                  <div className="h-full flex flex-col overflow-y-auto container containerscroll">
+                    <div className="flex flex-col justify-center items-center pt-6 pb-2 ">
+                      <div className="text-2xl font-semibold">Hiw</div>
+                      <div className="text-lg text-light-gray">Hiw</div>
+                    </div>
+                    <div className="h-full">
+                      <hr className="text-primary font-medium" />
+                      <InfoTable
+                        partyInfo={{
+                          location: 'location',
+                          description: 'description',
+                          distance: 1,
+                          price: 1,
+                          partySize: 1,
+                          host: {
                             img: 'img',
                             name: 'name',
                           },
-                        ],
-                      }}
-                    />
-
-                    <div className="pt-8 w-full flex flex-col">
-                      <Button
-                        text="Join"
-                        primary
-                        onClick={() => router.push('/party/1')}
+                          members: [
+                            {
+                              img: 'img',
+                              name: 'name',
+                            },
+                          ],
+                        }}
                       />
+
+                      <div className="pt-8 w-full flex flex-col">
+                        <Button
+                          text="Join"
+                          primary
+                          onClick={() => router.push('/party/1')}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </DrawerPartyDiv>
-            </Transition>
+                </DrawerPartyDiv>
+              </Transition>
+            )}
           </div>
         </div>
       </Layout>

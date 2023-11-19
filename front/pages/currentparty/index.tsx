@@ -1,13 +1,20 @@
 import Button from '@/components/common/Button';
 import Layout from '@/components/common/Layout';
 import InfoTable from '@/components/party/InfoTable';
+import { PartySystemContext, PartySystemContextType } from '@/contexts/party';
 import { WithRouterProps } from 'next/dist/client/with-router';
 import { withRouter } from 'next/router';
 import React from 'react';
-
 class PartyDetail extends React.Component<WithRouterProps> {
+  static contextType?: React.Context<PartySystemContextType> =
+    PartySystemContext;
+  constructor(props: WithRouterProps) {
+    super(props);
+  }
+
   render() {
     const { router } = this.props;
+    const partySystem = this.context as PartySystemContextType;
 
     return (
       <Layout type="party">

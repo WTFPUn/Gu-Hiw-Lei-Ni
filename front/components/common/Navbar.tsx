@@ -17,11 +17,7 @@ type NavigationItem = {
   active?: boolean;
 };
 
-const navigation: NavigationItem[] = [
-  { name: 'Home', href: '/home' },
-  { name: 'Profile', href: '/profile' },
-  { name: 'Matchmaking', href: '/matchmaking' },
-];
+const navigation: NavigationItem[] = [{ name: 'Home', href: '/home' }];
 
 type NavbarProps = {
   type?: 'normal' | 'chat' | 'party' | 'map';

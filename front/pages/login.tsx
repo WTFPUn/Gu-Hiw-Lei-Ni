@@ -35,7 +35,7 @@ class Login extends React.Component<WithRouterProps, {}> {
         if (status == false) {
           throw Error('Invalid username or password');
         }
-        this.props.router.push('/profile');
+        this.props.router.push('/home');
       } catch (e: any) {
         alert(e.message);
       }
