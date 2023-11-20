@@ -250,17 +250,20 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
 
         elif isinstance(request, StartPartyRequest):
             channel = "party", request.party_id
-            current_party: Party = self.pub_sub.channel_message[channel].data  # type: ignore
-            data = jwt.decode(
-                client.token, os.getenv("JWT_SECRET"), algorithms=["HS256"]
-            )
-            data = ClientCookie.model_validate(data)
+            current_party: ReferenceParty = self.pub_sub.channel_message[channel].data  # type: ignore
+
+            data = client.token_data
 
             user_id = data.user_id
-            if user_id != current_party.host_id:  # type: ignore
+            if current_party.host.user_id != user_id:  # type: ignore
                 raise Exception("Only host can start party")
 
             current_party.status = "in_progress"
+
+            await client.callback.send_json(
+                {"success": True, "message": "Successfully start party"}
+            )
+
             await self.pub_sub.publish(
                 channel, PartyResponse(type="party", data=current_party)  # type: ignore
             )
@@ -271,7 +274,8 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             channel = "party", request.party_id
             current_party: Party = self.pub_sub.channel_message[channel].data  # type: ignore
             user_id = client.token_data.user_id
-            if user_id != current_party.host_id:
+
+            if current_party.host.user_id != user_id:  # type: ignore
                 raise Exception("Only host can close party")
 
             delete_party_member = current_party.members
@@ -294,7 +298,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                 )
             else:
                 await client.callback.send_json(
-                    {"success": True, "message": "Successfully joined party"}
+                    {"success": True, "message": "Successfully close party"}
                 )
 
         elif isinstance(request, GetCurrentParty):
