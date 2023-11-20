@@ -24,11 +24,11 @@ import {
 } from '@/utils/map';
 import Link from 'next/link';
 import TextForm from '@/components/form/TextForm';
+import { PartySystemContext, PartySystemContextType } from '@/contexts/party';
 
 type HomeState = {
   center: Coords | null;
   selectedMarker: Coords | null;
-  currentLocation: Coords | null;
   zoom: number | null;
   showAll: boolean;
   maxDistance: number;
@@ -38,8 +38,10 @@ type HomeState = {
 
 type HomeProps = WithRouterProps & WithAuthProps;
 class Home extends React.Component<HomeProps, HomeState> {
-  private updateInterval: NodeJS.Timeout | null = null;
   private DistanceDropdownRef: DropdownForm | null = null;
+  static contextType?: React.Context<PartySystemContextType> =
+    PartySystemContext;
+
   constructor(props: HomeProps) {
     super(props);
     this.state = {
@@ -47,7 +49,6 @@ class Home extends React.Component<HomeProps, HomeState> {
         lat: 13.6513,
         lng: 100.4964,
       },
-      currentLocation: null,
       zoom: 11,
       selectedMarker: null,
       showAll: false,
@@ -79,6 +80,8 @@ class Home extends React.Component<HomeProps, HomeState> {
     });
   };
 
+  handle_join_party = () => {};
+
   reset_selected_marker = () => {
     this.setState({
       selectedMarker: null,
@@ -86,23 +89,6 @@ class Home extends React.Component<HomeProps, HomeState> {
       zoom: 15.9,
       menu: 'main',
     });
-  };
-
-  update_current_location = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        position => {
-          this.setState({
-            currentLocation: {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            },
-          });
-        },
-        console.log,
-        { enableHighAccuracy: true },
-      );
-    }
   };
 
   set_current_position = (mapPos: {
@@ -117,7 +103,8 @@ class Home extends React.Component<HomeProps, HomeState> {
   check_valid_create_location = () => {
     // reset to current location when over 4km
     // calculate distance from center screen to current location
-    const { currentLocation, center, maxDistance } = this.state;
+    const { center, maxDistance } = this.state;
+    const { currentLocation } = this.context as PartySystemContextType;
     if (!currentLocation || !center) return false;
     const distance = calculateDistance(currentLocation, center);
     console.log(distance);
@@ -128,6 +115,7 @@ class Home extends React.Component<HomeProps, HomeState> {
   };
 
   handle_select_create_location = async () => {
+    const { currentLocation } = this.context as PartySystemContextType;
     if (this.state.menu != 'createparty') return;
     if (this.check_valid_create_location()) {
       const places = await find_place_info(this.state.center as any);
@@ -136,8 +124,9 @@ class Home extends React.Component<HomeProps, HomeState> {
         placeInfo: places?.[0],
       });
     } else {
+      if (!currentLocation) return;
       this.setState({
-        center: this.state.currentLocation,
+        center: currentLocation,
       });
     }
   };
@@ -166,57 +155,22 @@ class Home extends React.Component<HomeProps, HomeState> {
     // console.log(this.state.zoom);
   };
 
-  componentDidMount(): void {
-    if (navigator.geolocation) {
-      console.log('Geolocation is supported!');
-
-      navigator.geolocation.getCurrentPosition(
-        position => {
-          console.log(position.coords);
-          this.updateInterval = setTimeout(this.update_current_location, 10000);
-
-          this.setState({
-            center: {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            },
-            zoom: 15.9,
-            currentLocation: {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            },
-          });
-        },
-        console.log,
-        { enableHighAccuracy: true },
-      );
-    }
-  }
-
-  componentWillUnmount(): void {
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-    }
-  }
-
   render() {
     const { router, auth_status, user } = this.props;
-    const {
-      selectedMarker,
-      currentLocation,
-      center,
-      zoom,
-      menu,
-      maxDistance,
-      placeInfo,
-    } = this.state;
+    const { selectedMarker, center, zoom, menu, maxDistance, placeInfo } =
+      this.state;
     const isSelected = selectedMarker !== null;
+    const partySystem = this.context as PartySystemContextType;
+
+    const { currentLocation } = partySystem;
 
     const { w, h } = meters2ScreenPixels(
       maxDistance * 1000 * 2,
       currentLocation ?? { lat: 0.0, lng: 0.0 },
       zoom || 0,
     );
+
+    console.log(partySystem);
 
     const DrawerPartyDiv = React.forwardRef<
       HTMLDivElement,
@@ -226,6 +180,7 @@ class Home extends React.Component<HomeProps, HomeState> {
       HTMLDivElement,
       DrawerContainerProps
     >((props, ref) => <DrawerContainer {...props} forwardRef={ref} />);
+
     return (
       <Layout>
         <div className="w-screen h-screen overflow-hidden overflow-x-hidden">
@@ -335,15 +290,24 @@ class Home extends React.Component<HomeProps, HomeState> {
               >
                 <div className="pb-4 flex justify-center gap-6">
                   {/* <IconButton img={'/magnifyingglass.png'} text="Matchmaking" /> */}
-                  <IconButton
-                    img={'/sushiroll.png'}
-                    text="Current Party"
-                    onClick={e => router.push('/currentparty')}
-                  />
+                  {
+                    <IconButton
+                      img={'/sushiroll.png'}
+                      text="Current Party"
+                      onClick={e => {
+                        if (!partySystem?.currentPartyInfo) {
+                          return alert('You are not in any party');
+                        }
+                        router.push('/currentparty');
+                      }}
+                    />
+                  }
                   <IconButton
                     img={'/rice.png'}
                     text="Create Party"
                     onClick={e => {
+                      if (partySystem?.currentPartyInfo)
+                        return alert('You are already in a party');
                       if (!currentLocation)
                         return alert(
                           'Please enable location permission to be able to create party.',

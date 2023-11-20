@@ -17,24 +17,18 @@ import { withRouter } from 'next/router';
 import React from 'react';
 
 type CreatePartyState = {
-  currentLocation: Coords;
   submitted: boolean;
 };
 
 type CreatePartyProps = {} & WithRouterProps;
 
 class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
-  private updateInterval: NodeJS.Timeout | null = null;
   private formRef: React.RefObject<HTMLFormElement>;
   static contextType?: React.Context<PartySystemContextType> =
     PartySystemContext;
   constructor(props: WithRouterProps) {
     super(props);
     this.state = {
-      currentLocation: {
-        lat: 0,
-        lng: 0,
-      },
       submitted: false,
     };
     this.formRef = React.createRef();
@@ -84,8 +78,28 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
         if (partySystem.send_msg && partySystem.fetch_current_party) {
           console.log('sending create party');
           partySystem.send_msg?.('ws', 'partyhandler', createData);
-          partySystem.fetch_current_party();
 
+          // Verifying if create party successfully
+          const MAXATTEMPTS = 10;
+          let attempts = 0;
+
+          const interval = setInterval(() => {
+            if (attempts >= MAXATTEMPTS) {
+              clearInterval(interval);
+              alert('Failed to create party');
+              this.setState({ submitted: false });
+              return;
+            }
+            partySystem.fetch_current_party?.();
+            if (partySystem.currentPartyInfo) {
+              clearInterval(interval);
+              this.setState({ submitted: false });
+              this.props.router.push('/currentparty');
+            }
+            attempts++;
+          }, 1000);
+
+          partySystem.fetch_current_party();
           // TODO: redirect to party page when detect current party
         }
         console.log(createData);
@@ -95,27 +109,9 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
     }
   }
 
-  update_current_location = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        position => {
-          console.log(position.coords);
-          this.setState({
-            currentLocation: {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            },
-          });
-        },
-        console.log,
-        { enableHighAccuracy: true },
-      );
-    }
-  };
-
   check_valid_create_location = () => {
     const { lat, lng } = this.props.router.query;
-    const { currentLocation } = this.state;
+    const { currentLocation } = this.context as PartySystemContextType;
     if (!currentLocation || !lat || !lng) return false;
     const distance = calculateDistance(currentLocation, {
       lat: +lat,
@@ -128,40 +124,17 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
     return true;
   };
 
-  componentDidMount() {
-    if (navigator.geolocation) {
-      console.log('Geolocation is supported!');
-
-      navigator.geolocation.getCurrentPosition(
-        position => {
-          console.log(position.coords);
-          this.updateInterval = setTimeout(this.update_current_location, 10000);
-
-          this.setState({
-            currentLocation: {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            },
-          });
-        },
-        console.log,
-        { enableHighAccuracy: true },
-      );
-    }
-  }
-
-  componentWillUnmount(): void {
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-    }
-  }
-
   render() {
     const { router } = this.props;
     const { lat, lng, place_id, address } = router.query;
 
-    if (router.isReady && (!lat || !lng || !place_id || !address)) {
-      router.push('/home');
+    const partySystem = this.context as PartySystemContextType;
+
+    if (router.isReady) {
+      if (!lat || !lng || !place_id || !address) router.push('/home');
+      if (partySystem.currentPartyInfo) {
+        router.push('/currentparty');
+      }
     }
 
     console.log(router.query);
