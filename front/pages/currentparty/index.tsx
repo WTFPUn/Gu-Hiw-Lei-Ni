@@ -2,9 +2,12 @@ import Button from '@/components/common/Button';
 import Layout from '@/components/common/Layout';
 import InfoTable from '@/components/party/InfoTable';
 import { PartySystemContext, PartySystemContextType } from '@/contexts/party';
+import { calculateDistance } from '@/utils/map';
+import { Coords } from 'google-map-react';
 import { WithRouterProps } from 'next/dist/client/with-router';
 import { withRouter } from 'next/router';
 import React from 'react';
+
 class PartyDetail extends React.Component<WithRouterProps> {
   static contextType?: React.Context<PartySystemContextType> =
     PartySystemContext;
@@ -15,6 +18,10 @@ class PartyDetail extends React.Component<WithRouterProps> {
   render() {
     const { router } = this.props;
     const partySystem = this.context as PartySystemContextType;
+
+    if (!partySystem?.currentPartyInfo) {
+      router.push('/home');
+    }
 
     return (
       <Layout type="party">
@@ -30,23 +37,17 @@ class PartyDetail extends React.Component<WithRouterProps> {
             <div className="h-full w-full">
               <hr className="text-primary font-medium" />
               <InfoTable
-                partyInfo={{
-                  location: 'location',
-                  description: 'description',
-                  distance: 1,
-                  price: 1,
-                  partySize: 1,
-                  host: {
-                    img: 'img',
-                    name: 'name',
-                  },
-                  members: [
-                    {
-                      img: 'img',
-                      name: 'name',
-                    },
-                  ],
-                }}
+                partyInfo={
+                  {
+                    distance: partySystem?.currentLocation
+                      ? calculateDistance(partySystem?.currentLocation, {
+                          lat: partySystem?.currentPartyInfo?.lat as number,
+                          lng: partySystem?.currentPartyInfo?.lng as number,
+                        }).toFixed(2)
+                      : undefined,
+                    ...partySystem?.currentPartyInfo,
+                  } as any
+                }
               />
             </div>
           </div>

@@ -1,33 +1,26 @@
 import React from 'react';
 import { RowItem, Table } from '../common/Table';
+import { PartyInfo } from '@/contexts/party';
 
 type InfoTableProps = {
-  partyInfo: {
-    location: string;
-    description: string;
-    distance: number;
-    price: number;
-    partySize: number;
-    host: {
-      img: string;
-      name: string;
-    };
-    members: {
-      img: string;
-      name: string;
-    }[];
-  };
+  partyInfo: PartyInfo;
 };
 
-function Member(props: { img: string; name: string }) {
+function Member(props: {
+  img?: string;
+  first_name: string;
+  last_name: string;
+}) {
   return (
     <div className="flex gap-2 justify-center items-center">
       <img
-        src={props.img}
+        src={props.img ?? '/meat.png'}
         alt=""
         className="w-8 h-8 bg-slate-500 rounded-full"
       />
-      <div className="text-sm font-medium">{props.name}</div>
+      <div className="text-sm font-medium">
+        {props.first_name + ' ' + props.last_name}
+      </div>
     </div>
   );
 }
@@ -36,26 +29,34 @@ class InfoTable extends React.Component<InfoTableProps> {
   render() {
     const { partyInfo } = this.props;
 
-    const members = partyInfo.members.map(member => {
+    const members = partyInfo.members?.map(member => {
       return <Member {...member} />;
     });
     return (
       <Table>
         <RowItem name="Location">
-          <span className=" underline text-red-600 cursor-pointer">
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+              partyInfo?.location || '',
+            )}&query_place_id=${partyInfo.place_id}`}
+            target="_blank"
+            className=" underline text-red-600 cursor-pointer"
+          >
             {partyInfo.location}
-          </span>
+          </a>
         </RowItem>
         <RowItem name="Description">{partyInfo.description}</RowItem>
-        <RowItem name="Distance">{partyInfo.distance + ' km'}</RowItem>
+        {partyInfo?.distance != undefined && (
+          <RowItem name="Distance">{partyInfo.distance + ' km'}</RowItem>
+        )}
         <RowItem name="Price">
           <img
             src={
-              partyInfo.price == 1
+              partyInfo.budget == 'low'
                 ? '/price1.svg'
-                : partyInfo.price == 2
+                : partyInfo.budget == 'medium'
                 ? '/price2.svg'
-                : partyInfo.price == 3
+                : partyInfo.budget == 'high'
                 ? '/price3.svg'
                 : ''
             }
@@ -63,11 +64,11 @@ class InfoTable extends React.Component<InfoTableProps> {
             className="w-16 h-8"
           />
         </RowItem>
-        <RowItem name="Party Size">{partyInfo.partySize}</RowItem>
+        <RowItem name="Party Size">{partyInfo.size}</RowItem>
         <RowItem name="Host">
           {
             <div className="flex">
-              <Member {...partyInfo.host} />
+              {partyInfo.host ? <Member {...partyInfo.host} /> : <></>}
             </div>
           }
         </RowItem>

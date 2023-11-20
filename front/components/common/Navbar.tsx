@@ -142,7 +142,11 @@ class Navbar extends React.Component<NavbarProps> {
                         this.props.type == 'chat') && (
                         <div
                           className="absolute p-4 cursor-pointer"
-                          onClick={() => this.props.router.back()}
+                          onClick={() => {
+                            if (this.props.type == 'chat')
+                              this.props.router.back();
+                            else this.props.router.push('/home');
+                          }}
                         >
                           <ArrowLongLeftIcon className="h-8 w-8 text-primary" />
                         </div>

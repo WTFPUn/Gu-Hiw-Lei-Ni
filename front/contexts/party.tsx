@@ -3,7 +3,14 @@ import { Coords } from 'google-map-react';
 import React, { useMemo } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 
+export type MemberType = {
+  first_name: string;
+  last_name: string;
+  user_id: string;
+};
+
 export type PartyInfo = {
+  id: string;
   party_name: string;
   host_id?: string;
   description: string;
@@ -12,7 +19,8 @@ export type PartyInfo = {
   place_id?: string;
   location?: string;
   distance?: number;
-  members?: any[];
+  members?: MemberType[];
+  host?: MemberType;
   size?: number;
   status?: 'not_started' | 'in_progress' | 'finished' | 'cancelled';
   budget?: 'low' | 'medium' | 'high';
@@ -26,10 +34,15 @@ type MessageSender = (
 ) => void;
 
 export type PartySystemContextType = {
+  currentLocation?: Coords;
   currentPartyInfo: PartyInfo | null;
+  queryPartyInfo?: PartyInfo | null;
   lastJsonMessage?: any;
   send_msg?: MessageSender;
   fetch_current_party?: () => void;
+  query_party?: (party_id: string) => void;
+  join_party?: (party_id: string) => void;
+  clear_query_party?: () => void;
 };
 
 export const PartySystemContext = React.createContext<PartySystemContextType>({
@@ -82,30 +95,6 @@ export default function PartySystemProvider({
     currentPartyInfo: null,
   });
 
-  const handle_socket_open = () => {
-    if (check_if_auth()) send('ws_connect', null, {});
-  };
-
-  const handle_socket_message = () => {
-    const message = lastJsonMessage as any;
-    // if message is null or undefined or invalid
-    if (!message?.type) {
-      console.log('unhandled message', message);
-      return;
-    }
-    console.log('message', message);
-    if (message.type == 'success' && message?.data == 'connected') {
-      console.log('successfully authenticated websocket');
-    } else if (message.type == 'ws') {
-      switch (message?.service) {
-        case 'partyhandler':
-          return;
-        default:
-          console.log('unhandled service', message?.service, message?.data);
-      }
-    }
-  };
-
   const send = (
     type: string,
     service: string | null,
@@ -123,15 +112,86 @@ export default function PartySystemProvider({
     });
   };
 
-  const setParty = (party: PartyInfo | null) => {
-    setSystemState(state => {
-      return { ...state, currentPartyInfo: party };
-    });
+  const handle_socket_open = () => {
+    if (check_if_auth()) send('ws_connect', null, {});
+    else setSystemState(state => ({ ...state, currentPartyInfo: null }));
   };
 
   const fetch_current_party_info = () => {
     console.log('fetching current party info');
     send('ws', 'partyhandler', { type: 'get_current_party' });
+  };
+
+  const join_party = (party_id: string) => {
+    console.log('joining party', party_id);
+    send('ws', 'partyhandler', { type: 'join_party', party_id });
+  };
+
+  const handle_socket_message = () => {
+    const message = lastJsonMessage as any;
+    // if message is null or undefined or invalid
+    if (!message?.type) {
+      console.log('unhandled message', message);
+      return;
+    }
+    console.log('message', message);
+    if (message.type == 'success') {
+      if (typeof message.data == 'string') {
+        switch (message?.data) {
+          case 'connected':
+          case 'reconnected':
+            console.log('successfully authenticated websocket');
+            break;
+          default:
+            console.error('unhandled success message', message);
+            break;
+        }
+      } else if (typeof message.data == 'object') {
+        switch (message.data?.type) {
+          case 'party':
+            setSystemState(state => {
+              return { ...state, currentPartyInfo: message.data };
+            });
+            break;
+          default:
+            console.error('unhandled success message data object', message);
+            break;
+        }
+      }
+
+      fetch_current_party_info();
+    } else if (message.type == 'ws') {
+      console.error('unhandled service', message?.service, message?.data);
+    } else if (message.type == 'party') {
+      const partyData = message?.data as PartyInfo;
+
+      if (partyData.id) {
+        setSystemState(state => {
+          return { ...state, currentPartyInfo: partyData };
+        });
+      }
+    }
+  };
+
+  const update_current_location = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          console.log(position.coords);
+          setSystemState(state => {
+            return {
+              ...state,
+              currentLocation: {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+              },
+            };
+          });
+        },
+        console.log,
+        { enableHighAccuracy: true },
+      );
+    }
   };
 
   React.useEffect(() => {
@@ -140,11 +200,15 @@ export default function PartySystemProvider({
 
   // handle token change and set function in context
   React.useEffect(() => {
-    setSystemState(state => {
-      return { ...state, set_current_party: setParty, send_msg: send };
-    });
+    let updateInterval: NodeJS.Timeout;
+    update_current_location();
+    updateInterval = setInterval(() => {
+      update_current_location();
+    }, 10000);
+
     window.addEventListener('tokenChange', handle_socket_open);
     return () => {
+      clearInterval(updateInterval);
       window.removeEventListener('tokenChange', handle_socket_open);
     };
   }, []);
@@ -155,6 +219,7 @@ export default function PartySystemProvider({
         ? {
             send_msg: send,
             fetch_current_party: fetch_current_party_info,
+            join_party,
           }
         : {};
 
