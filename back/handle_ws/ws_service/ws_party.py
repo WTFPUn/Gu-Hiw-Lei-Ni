@@ -152,6 +152,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                 return False
 
             party_host = User.model_validate(party_host)
+            party_host.__dict__.pop("password")
 
             copy_party = partydata.model_copy()
             dumpb_copy_party = copy_party.model_dump(exclude={"members", "host_id"})
@@ -217,6 +218,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                 return False
 
             user = User.model_validate(user)
+            user.__dict__.pop("password")
 
             copy_party = party.data.model_copy()
             dumpb_copy_party = copy_party.model_dump(exclude={"members", "host_id"})
