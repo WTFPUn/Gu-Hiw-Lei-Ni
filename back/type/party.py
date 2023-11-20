@@ -45,3 +45,9 @@ class ReferenceParty(Party):
     host_id: ClassVar[None] = None
     host: User
     members: list[User]
+
+    def check_member_exist(self, user_id: str) -> bool:
+        for member in self.members:
+            if member.user_id == user_id:
+                return True
+        return False
