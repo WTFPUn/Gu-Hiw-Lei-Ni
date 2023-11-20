@@ -4,6 +4,7 @@ import InfoTable from '@/components/party/InfoTable';
 import { WithRouterProps } from 'next/dist/client/with-router';
 import { withRouter } from 'next/router';
 import React from 'react';
+import Image from 'next/image';
 
 type ChatBubbleProps = {
   text: string;
@@ -40,7 +41,12 @@ function ChatBubble(props: ChatBubbleProps) {
           </>
         ) : (
           <>
-            <div className="text-xs pb-2">{props.user}</div>
+            <div className="flex gap-2">
+              <div className="text-xs pb-2">{props.user}</div>
+              {props.isHost && (
+                <img alt="crown" src="/crown.png" className="w-4 h-4" />
+              )}
+            </div>
             <div className="flex gap-2">
               <p className="bg-primary text-white p-2 px-4 rounded-3xl">
                 {props.text}
@@ -102,7 +108,7 @@ class PartyChat extends React.Component<WithRouterProps, PartyChatState> {
               text="Hello"
               time={'0:00'}
               isMe={false}
-              isHost={false}
+              isHost={true}
             />
             <ChatBubble
               user="what"
