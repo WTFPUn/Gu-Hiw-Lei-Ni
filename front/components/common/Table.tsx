@@ -16,7 +16,7 @@ type TableProps = {
 export function RowItem(props: TableRowProps) {
   return (
     <tr>
-      <td className="font-medium py-1.5 pr-2">{props.name}</td>
+      <td className="font-medium py-2 pr-2 align-top">{props.name}</td>
       <td>{props.children}</td>
     </tr>
   );

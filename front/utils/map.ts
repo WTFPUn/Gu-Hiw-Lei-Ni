@@ -58,6 +58,42 @@ export async function find_place_info(p: Coords) {
   return null;
 }
 
+export async function get_place_info(id?: string) {
+  if (!id) return null;
+  try {
+    const api_link = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${id}&fields=formatted_address,name,geometry,photo&key=${process.env.NEXT_PUBLIC_GOOGLE_API_KEY}`;
+    const req = await fetch(api_link, {
+      method: 'GET',
+    });
+    if (req.ok) {
+      const res = await req.json();
+      return res?.result;
+    }
+  } catch (error) {
+    console.error(error);
+  }
+
+  return null;
+}
+
+export async function get_place_image(imgRefId?: string) {
+  if (!imgRefId) return null;
+  try {
+    const api_link = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${imgRefId}&key=${process.env.NEXT_PUBLIC_GOOGLE_API_KEY}`;
+    const req = await fetch(api_link, {
+      method: 'POST',
+    });
+    if (req.ok) {
+      const res = await req.blob();
+      return URL.createObjectURL(res);
+    }
+  } catch (error) {
+    console.error(error);
+  }
+
+  return null;
+}
+
 let timer: NodeJS.Timeout;
 
 /**

@@ -22,6 +22,7 @@ export type PartyInfo = {
   members?: MemberType[];
   host?: MemberType;
   size?: number;
+  created_timestamp?: string;
   status?: 'not_started' | 'in_progress' | 'finished' | 'cancelled';
   budget?: 'low' | 'medium' | 'high';
 };
@@ -37,11 +38,15 @@ export type PartySystemContextType = {
   currentLocation?: Coords;
   currentPartyInfo: PartyInfo | null;
   queryPartyInfo?: PartyInfo | null;
+  nearbyParties?: PartyInfo[];
   lastJsonMessage?: any;
   send_msg?: MessageSender;
   fetch_current_party?: () => void;
+  fetch_nearby_parties?: (distance: number) => void;
   query_party?: (party_id: string) => void;
   join_party?: (party_id: string) => void;
+  leave_party?: () => void;
+
   clear_query_party?: () => void;
 };
 
@@ -127,6 +132,12 @@ export default function PartySystemProvider({
     send('ws', 'partyhandler', { type: 'join_party', party_id });
   };
 
+  const leave_party = () => {
+    console.log('leaving party');
+    if (systemState.currentPartyInfo)
+      send('ws', 'partyhandler', { type: 'leave_party' });
+  };
+
   const handle_socket_message = () => {
     const message = lastJsonMessage as any;
     // if message is null or undefined or invalid
@@ -177,7 +188,7 @@ export default function PartySystemProvider({
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         position => {
-          console.log(position.coords);
+          // console.log(position.coords);
           setSystemState(state => {
             return {
               ...state,

@@ -12,7 +12,7 @@ function Member(props: {
   last_name: string;
 }) {
   return (
-    <div className="flex gap-2 justify-center items-center">
+    <div className="flex gap-2 items-center">
       <img
         src={props.img ?? '/meat.png'}
         alt=""
@@ -30,7 +30,11 @@ class InfoTable extends React.Component<InfoTableProps> {
     const { partyInfo } = this.props;
 
     const members = partyInfo.members?.map(member => {
-      return <Member {...member} />;
+      return (
+        <>
+          <Member {...member} /> <br />
+        </>
+      );
     });
     return (
       <Table>
@@ -73,7 +77,7 @@ class InfoTable extends React.Component<InfoTableProps> {
           }
         </RowItem>
         <RowItem name="Members">
-          <div className="flex flex-wrap">{members}</div>
+          <div className="flex flex-wrap flex-col">{members}</div>
         </RowItem>
       </Table>
     );
