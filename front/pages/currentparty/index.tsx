@@ -12,11 +12,6 @@ import { WithRouterProps } from 'next/dist/client/with-router';
 import { withRouter } from 'next/router';
 import React from 'react';
 
-type PartyDetailState = {
-  placePicture: string;
-  placeDetail?: any;
-};
-
 type PartyDetailProps = {} & WithRouterProps;
 
 class PartyDetail extends React.Component<PartyDetailProps, PartyDetailState> {
@@ -24,34 +19,12 @@ class PartyDetail extends React.Component<PartyDetailProps, PartyDetailState> {
     PartySystemContext;
   constructor(props: WithRouterProps) {
     super(props);
-    this.state = {
-      placePicture: '/meat.png',
-    };
-  }
-
-  async componentDidMount() {
-    const partySystem = this.context as PartySystemContextType;
-    if (partySystem?.currentPartyInfo) {
-      const placePhotoRes = await fetch(
-        '/api/place_photo?placeid=' + partySystem.currentPartyInfo?.place_id,
-        {
-          method: 'GET',
-        },
-      );
-      console.log(placePhotoRes);
-      if (placePhotoRes.ok) {
-        const placePhoto = await placePhotoRes.json();
-        this.setState({
-          placePicture: placePhoto.photo,
-        });
-      }
-    }
   }
 
   render() {
     const { router } = this.props;
     const partySystem = this.context as PartySystemContextType;
-    const { placePicture } = this.state;
+    const { currentPartyInfo } = partySystem;
 
     if (router.isReady && !partySystem?.currentPartyInfo) {
       router.push('/home');
@@ -62,16 +35,19 @@ class PartyDetail extends React.Component<PartyDetailProps, PartyDetailState> {
         <div className="h-screen flex flex-col justify-center w-screen content-between items-center pb-4">
           <div className="grow w-3/4 pt-16">
             <div className="max-w-full h-[25vh] p-0.5 border-2 rounded-lg border-secondary">
-              <img src={placePicture} className="w-full h-full object-cover" />
+              <img
+                src={currentPartyInfo?.image ?? '/meat.png'}
+                className="w-full h-full object-cover rounded-sm"
+              />
             </div>
             <div className="flex flex-col justify-center items-center pt-6 pb-2 ">
               <div className="text-2xl font-semibold">
-                {partySystem?.currentPartyInfo?.party_name}
+                {currentPartyInfo?.party_name}
               </div>
-              {partySystem?.currentPartyInfo?.created_timestamp && (
+              {currentPartyInfo?.created_timestamp && (
                 <div className="text-md text-light-gray">
                   {new Date(
-                    partySystem?.currentPartyInfo?.created_timestamp,
+                    currentPartyInfo?.created_timestamp,
                   ).toLocaleString()}
                 </div>
               )}
@@ -83,11 +59,11 @@ class PartyDetail extends React.Component<PartyDetailProps, PartyDetailState> {
                   {
                     distance: partySystem?.currentLocation
                       ? calculateDistance(partySystem?.currentLocation, {
-                          lat: partySystem?.currentPartyInfo?.lat as number,
-                          lng: partySystem?.currentPartyInfo?.lng as number,
+                          lat: currentPartyInfo?.lat as number,
+                          lng: currentPartyInfo?.lng as number,
                         }).toFixed(2)
                       : undefined,
-                    ...partySystem?.currentPartyInfo,
+                    ...currentPartyInfo,
                   } as any
                 }
               />

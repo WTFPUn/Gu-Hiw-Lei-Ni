@@ -76,9 +76,11 @@ class InfoTable extends React.Component<InfoTableProps> {
             </div>
           }
         </RowItem>
-        <RowItem name="Members">
-          <div className="flex flex-wrap flex-col">{members}</div>
-        </RowItem>
+        {members && (
+          <RowItem name="Members">
+            <div className="flex flex-wrap flex-col">{members}</div>
+          </RowItem>
+        )}
       </Table>
     );
   }

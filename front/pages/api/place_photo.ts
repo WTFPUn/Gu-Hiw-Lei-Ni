@@ -7,7 +7,6 @@ export default async function handlePlacePhoto(
 ) {
   const { placeid } = req.query;
   const placeInfo = await get_place_info(placeid as string);
-  console.log(placeInfo);
   if (!placeInfo?.photos || placeInfo?.photos?.length === 0)
     return res.status(404).json({ error: 'No photo found' });
 
@@ -25,4 +24,5 @@ export default async function handlePlacePhoto(
 
     return res.status(200).send({ photo: 'data:image/jpg;base64,' + photoR });
   }
+  return res.status(500).json({ error: 'Internal server error' });
 }

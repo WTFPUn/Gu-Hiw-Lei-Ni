@@ -59,6 +59,7 @@ export async function find_place_info(p: Coords) {
 }
 
 export async function get_place_info(id?: string) {
+  // id is place_id
   if (!id) return null;
   try {
     const api_link = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${id}&fields=formatted_address,name,geometry,photo&key=${process.env.NEXT_PUBLIC_GOOGLE_API_KEY}`;
@@ -92,6 +93,17 @@ export async function get_place_image(imgRefId?: string) {
   }
 
   return null;
+}
+
+export async function get_place_photo_client(id?: string): Promise<string> {
+  return id
+    ? await fetch('/api/place_photo?placeid=' + id, {
+        method: 'GET',
+      })
+        .then(res => res.json())
+        .then(value => value?.photo)
+        .catch(() => '/meat.png')
+    : '/meat.png';
 }
 
 let timer: NodeJS.Timeout;

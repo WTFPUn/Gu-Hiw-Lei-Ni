@@ -28,7 +28,7 @@ import { PartySystemContext, PartySystemContextType } from '@/contexts/party';
 
 type HomeState = {
   center: Coords | null;
-  selectedMarker: Coords | null;
+  selectedMarker: (Coords & { party_id: string }) | null;
   zoom: number | null;
   showAll: boolean;
   maxDistance: number;
@@ -65,11 +65,14 @@ class Home extends React.Component<HomeProps, HomeState> {
     });
   };
 
-  handle_click_marker = (lat: number, lng: number) => {
+  handle_click_marker = (lat: number, lng: number, partyId: string) => {
+    const { query_party } = this.context as PartySystemContextType;
+    query_party?.(partyId);
     this.setState({
       selectedMarker: {
         lat,
         lng,
+        party_id: partyId,
       },
       center: {
         lat,
@@ -83,6 +86,8 @@ class Home extends React.Component<HomeProps, HomeState> {
   handle_join_party = () => {};
 
   reset_selected_marker = () => {
+    const { clear_query_party } = this.context as PartySystemContextType;
+    clear_query_party?.();
     this.setState({
       selectedMarker: null,
       center: null,
@@ -98,6 +103,31 @@ class Home extends React.Component<HomeProps, HomeState> {
     this.setState({
       ...mapPos,
     });
+  };
+
+  verify_location_permission = (func: (...args: any[]) => any) => {
+    return (e: any) => {
+      const { currentLocation } = this.context as PartySystemContextType;
+      if (!currentLocation) {
+        alert('Please enable location permission to use this feature.');
+        return;
+      }
+      func(e);
+    };
+  };
+
+  verify_party = (func: (...args: any[]) => any, options?: { not: true }) => {
+    return (e: any) => {
+      const { currentPartyInfo } = this.context as PartySystemContextType;
+      if (!options?.not && !currentPartyInfo) {
+        alert('You are not in a party.');
+        return;
+      } else if (options?.not && currentPartyInfo) {
+        alert('You are already in a party.');
+        return;
+      }
+      func(e);
+    };
   };
 
   check_valid_create_location = () => {
@@ -130,14 +160,9 @@ class Home extends React.Component<HomeProps, HomeState> {
       });
     }
   };
-  // on map load
+
+  // on map load, add listener to update current position for react state
   handle_google_maps = (map: any, maps: any, ref: any) => {
-    // maps.event.addListener(map, 'dragend', () => {
-    //   this.handle_select_create_location();
-    // });
-    // maps.event.addListener(map, 'zoom_changed', () => {
-    //   this.handle_select_create_location();
-    // });
     maps.event.addListener(map, 'idle', () => {
       const zoom = map.getZoom();
       const centerObj = map.getCenter();
@@ -152,7 +177,6 @@ class Home extends React.Component<HomeProps, HomeState> {
 
       this.set_current_position({ zoom, center });
     });
-    // console.log(this.state.zoom);
   };
 
   render() {
@@ -162,15 +186,13 @@ class Home extends React.Component<HomeProps, HomeState> {
     const isSelected = selectedMarker !== null;
     const partySystem = this.context as PartySystemContextType;
 
-    const { currentLocation } = partySystem;
+    const { currentLocation, currentPartyInfo, queryPartyInfo } = partySystem;
 
     const { w, h } = meters2ScreenPixels(
       maxDistance * 1000 * 2,
       currentLocation ?? { lat: 0.0, lng: 0.0 },
       zoom || 0,
     );
-
-    console.log(partySystem);
 
     const DrawerPartyDiv = React.forwardRef<
       HTMLDivElement,
@@ -232,6 +254,7 @@ class Home extends React.Component<HomeProps, HomeState> {
                     lat={location.lat}
                     lng={location.lng}
                     onClick={this.handle_click_marker}
+                    partyId={''}
                     active={
                       selectedMarker?.lat === location.lat &&
                       selectedMarker?.lng === location.lng
@@ -292,37 +315,43 @@ class Home extends React.Component<HomeProps, HomeState> {
                   {/* <IconButton img={'/magnifyingglass.png'} text="Matchmaking" /> */}
                   {
                     <IconButton
-                      img={'/sushiroll.png'}
+                      img={currentPartyInfo ? '/sushi.png' : '/bwsushi.png'}
                       text="Current Party"
-                      onClick={e => {
-                        if (!partySystem?.currentPartyInfo) {
-                          return alert('You are not in any party');
-                        }
-                        router.push('/currentparty');
-                      }}
+                      onClick={this.verify_party(e => {
+                        // router.push('/currentparty');
+                        if (currentPartyInfo)
+                          this.handle_click_marker(
+                            currentPartyInfo?.lat,
+                            currentPartyInfo?.lng,
+                            currentPartyInfo?.id,
+                          );
+                      })}
                     />
                   }
                   <IconButton
-                    img={'/rice.png'}
+                    img={
+                      currentLocation && !currentPartyInfo
+                        ? '/rice.png'
+                        : '/bwrice.png'
+                    }
                     text="Create Party"
-                    onClick={e => {
-                      if (partySystem?.currentPartyInfo)
-                        return alert('You are already in a party');
-                      if (!currentLocation)
-                        return alert(
-                          'Please enable location permission to be able to create party.',
-                        );
-                      this.setState({
-                        center: {
-                          lat: currentLocation?.lat ?? 0,
-                          lng: currentLocation?.lng ?? 0,
+                    onClick={this.verify_location_permission(
+                      this.verify_party(
+                        e => {
+                          this.setState({
+                            center: {
+                              lat: currentLocation?.lat ?? 0,
+                              lng: currentLocation?.lng ?? 0,
+                            },
+                            zoom: 16,
+                            menu: 'createparty',
+                          });
+                          this.setState({ menu: 'createparty' });
+                          console.log(this.state);
                         },
-                        zoom: 16,
-                        menu: 'createparty',
-                      });
-                      this.setState({ menu: 'createparty' });
-                      console.log(this.state);
-                    }}
+                        { not: true },
+                      ),
+                    )}
                   />
                 </div>
                 <div className="flex flex-col gap-1">
@@ -444,50 +473,86 @@ class Home extends React.Component<HomeProps, HomeState> {
                 as={React.Fragment}
               >
                 <DrawerPartyDiv>
-                  {menu == 'selectparty' && (
-                    <div className="absolute transform w-20 h-20 p-2 bg-cream left-1/2 -translate-y-3/4 -translate-x-1/2  rounded-full">
-                      <img
-                        src="/meat.png"
-                        className="rounded-full border border-yellow"
-                      />
-                    </div>
-                  )}
-                  <div className="h-full flex flex-col overflow-y-auto container containerscroll">
-                    <div className="flex flex-col justify-center items-center pt-6 pb-2 ">
-                      <div className="text-2xl font-semibold">Hiw</div>
-                      <div className="text-lg text-light-gray">Hiw</div>
-                    </div>
-                    <div className="h-full">
-                      <hr className="text-primary font-medium" />
-                      <InfoTable
-                        partyInfo={{
-                          location: 'location',
-                          description: 'description',
-                          distance: 1,
-                          price: 1,
-                          partySize: 1,
-                          host: {
-                            img: 'img',
-                            name: 'name',
-                          },
-                          members: [
-                            {
-                              img: 'img',
-                              name: 'name',
-                            },
-                          ],
-                        }}
-                      />
-
-                      <div className="pt-8 w-full flex flex-col">
-                        <Button
-                          text="Join"
-                          primary
-                          onClick={() => router.push('/party/1')}
+                  {queryPartyInfo ? (
+                    <>
+                      <div className="absolute transform w-20 h-20 p-2 bg-cream left-1/2 -translate-y-3/4 -translate-x-1/2  rounded-full">
+                        <img
+                          src={queryPartyInfo?.image ?? '/meat.png'}
+                          className="rounded-full border w-full h-full border-yellow bg-cover"
                         />
                       </div>
-                    </div>
-                  </div>
+                      <div className="h-full flex flex-col overflow-y-auto container containerscroll">
+                        <div className="flex flex-col justify-center items-center pt-6 pb-2 ">
+                          <div className="text-2xl font-semibold">
+                            {queryPartyInfo?.party_name}
+                          </div>
+                          {queryPartyInfo?.created_timestamp && (
+                            <div className="text-md text-light-gray">
+                              {new Date(
+                                queryPartyInfo?.created_timestamp,
+                              ).toLocaleString()}
+                            </div>
+                          )}
+                        </div>
+                        <div className="h-full">
+                          <hr className="text-primary font-medium" />
+                          <InfoTable
+                            partyInfo={
+                              {
+                                distance: partySystem?.currentLocation
+                                  ? calculateDistance(
+                                      partySystem?.currentLocation,
+                                      {
+                                        lat: queryPartyInfo?.lat as number,
+                                        lng: queryPartyInfo?.lng as number,
+                                      },
+                                    ).toFixed(2)
+                                  : undefined,
+                                ...queryPartyInfo,
+                                members: null,
+                              } as any
+                            }
+                          />
+
+                          <div className="pb-4 pt-4 w-full flex flex-col gap-2">
+                            {!currentPartyInfo && currentLocation && (
+                              <Button
+                                text="Join"
+                                primary
+                                onClick={() =>
+                                  partySystem.join_party?.(
+                                    'f136db1e-c5f3-49b9-b5f2-7216366bab9c',
+                                  )
+                                }
+                              />
+                            )}
+
+                            {currentPartyInfo?.id ===
+                              selectedMarker?.party_id && (
+                              <>
+                                <Button
+                                  text="More Information"
+                                  onClick={() => router.push('/currentparty')}
+                                  primary
+                                />
+                                <Button
+                                  text="Leave"
+                                  danger
+                                  onClick={() => partySystem.leave_party?.()}
+                                />
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-center font-medium pt-2">
+                        Loading
+                      </div>
+                    </>
+                  )}
                 </DrawerPartyDiv>
               </Transition>
             )}

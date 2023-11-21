@@ -26,6 +26,7 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
   private formRef: React.RefObject<HTMLFormElement>;
   static contextType?: React.Context<PartySystemContextType> =
     PartySystemContext;
+  private checkInterval?: NodeJS.Timeout;
   constructor(props: WithRouterProps) {
     super(props);
     this.state = {
@@ -44,7 +45,7 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
 
     if (form && this.check_valid_create_location() && !this.state.submitted) {
       const formData = new FormData(form);
-      const data = {
+      const partyData = {
         party_name: formData.get('partyname'),
         description: formData.get('party description'),
         location: formData.get('location'),
@@ -57,52 +58,55 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
       };
       try {
         if (
-          data.party_name == '' ||
-          data.description == '' ||
-          data.location == '' ||
-          data.budget == '' ||
-          data.size == ''
+          partyData.party_name == '' ||
+          partyData.description == '' ||
+          partyData.location == '' ||
+          partyData.budget == '' ||
+          partyData.size == ''
         ) {
           throw Error('Please fill in all fields');
         }
-        if (data?.size && !(+data?.size >= 2 && +data?.size <= 64)) {
+        if (
+          partyData?.size &&
+          !(+partyData?.size >= 2 && +partyData?.size <= 64)
+        ) {
           throw Error('Party size must be between 2 and 64');
         }
         if (!confirm('Are you sure you want to create this party?')) return;
         this.setState({ submitted: true });
         const partySystem = this.context as PartySystemContextType;
-        const createData: CreatePartyData = {
-          type: 'create_party',
-          party: data as unknown as PartyInfo,
-        };
         if (partySystem.send_msg && partySystem.fetch_current_party) {
           console.log('sending create party');
-          partySystem.send_msg?.('ws', 'partyhandler', createData);
+          partySystem?.create_party?.(partyData as unknown as PartyInfo);
 
           // Verifying if create party successfully
           const MAXATTEMPTS = 10;
           let attempts = 0;
+          let done = false;
 
-          const interval = setInterval(() => {
-            if (attempts >= MAXATTEMPTS) {
-              clearInterval(interval);
-              alert('Failed to create party');
+          this.checkInterval = setInterval(() => {
+            console.log('still checking result');
+
+            partySystem.fetch_current_party?.();
+            if (partySystem.currentPartyInfo) {
+              attempts = 11; // to prevent it from being cleared again
+              done = true;
+              this.setState({ submitted: false });
+              this.props.router.push('/currentparty');
+              return;
+            } else if (
+              attempts >= MAXATTEMPTS &&
+              !partySystem.currentPartyInfo &&
+              done == false
+            ) {
+              clearInterval(this.checkInterval);
+              // alert('Failed to create party');
               this.setState({ submitted: false });
               return;
             }
-            partySystem.fetch_current_party?.();
-            if (partySystem.currentPartyInfo) {
-              clearInterval(interval);
-              this.setState({ submitted: false });
-              this.props.router.push('/currentparty');
-            }
             attempts++;
-          }, 1000);
-
-          partySystem.fetch_current_party();
-          // TODO: redirect to party page when detect current party
+          }, 2000);
         }
-        console.log(createData);
       } catch (e: any) {
         alert(e.message);
       }
@@ -174,8 +178,8 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
               name="price"
               options={[
                 { text: '$', value: 'low' },
-                { text: '$$', value: 'medium' },
-                { text: '$$$', value: 'high' },
+                { text: '$$$', value: 'medium' },
+                { text: '$$$$$', value: 'high' },
               ]}
             />
             <TextForm

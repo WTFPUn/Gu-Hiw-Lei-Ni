@@ -1,4 +1,5 @@
 import { check_if_auth, get_auth } from '@/utils/auth';
+import { get_place_photo_client } from '@/utils/map';
 import { Coords } from 'google-map-react';
 import React, { useMemo } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
@@ -18,6 +19,7 @@ export type PartyInfo = {
   lng: number;
   place_id?: string;
   location?: string;
+  image?: string;
   distance?: number;
   members?: MemberType[];
   host?: MemberType;
@@ -36,7 +38,7 @@ type MessageSender = (
 
 export type PartySystemContextType = {
   currentLocation?: Coords;
-  currentPartyInfo: PartyInfo | null;
+  currentPartyInfo?: PartyInfo | null;
   queryPartyInfo?: PartyInfo | null;
   nearbyParties?: PartyInfo[];
   lastJsonMessage?: any;
@@ -45,16 +47,14 @@ export type PartySystemContextType = {
   fetch_nearby_parties?: (distance: number) => void;
   query_party?: (party_id: string) => void;
   join_party?: (party_id: string) => void;
+  create_party?: (party: PartyInfo) => void;
   leave_party?: () => void;
-
   clear_query_party?: () => void;
 };
 
-export const PartySystemContext = React.createContext<PartySystemContextType>({
-  currentPartyInfo: null,
-  send_msg: (type: string, service: string | null, data: object) => {},
-  fetch_current_party: () => {},
-});
+export const PartySystemContext = React.createContext<PartySystemContextType>(
+  {},
+);
 
 export interface JoinPartyData {
   type: 'join_party';
@@ -96,14 +96,14 @@ export default function PartySystemProvider({
     shouldReconnect: closeEvent => true,
   });
 
-  const [systemState, setSystemState] = React.useState<PartySystemContextType>({
-    currentPartyInfo: null,
-  });
+  const [systemState, setSystemState] = React.useState<PartySystemContextType>(
+    {},
+  );
 
   const send = (
     type: string,
     service: string | null,
-    data: object,
+    data?: object,
     channel?: string[],
   ) => {
     const authInfo = get_auth();
@@ -138,13 +138,39 @@ export default function PartySystemProvider({
       send('ws', 'partyhandler', { type: 'leave_party' });
   };
 
-  const handle_socket_message = () => {
+  const create_party = (party: PartyInfo) => {
+    console.log('creating party', party);
+    send('ws', 'partyhandler', { type: 'create_party', party });
+  };
+
+  const query_party = (party_id: string) => {
+    // if party id is the same as current party info, set query party info to current party info
+    console.log('querying party', party_id);
+    if (party_id == systemState?.currentPartyInfo?.id) {
+      console.log('party same as current party info');
+      setSystemState(state => {
+        return { ...state, queryPartyInfo: systemState.currentPartyInfo };
+      });
+      return;
+    }
+    send('get', 'partyhandler', undefined, ['party', party_id]);
+  };
+
+  const clear_query_party = () => {
+    console.log('clearing query party');
+    setSystemState(state => {
+      return { ...state, queryPartyInfo: null };
+    });
+  };
+
+  const handle_socket_message = async () => {
     const message = lastJsonMessage as any;
     // if message is null or undefined or invalid
     if (!message?.type) {
       console.log('unhandled message', message);
       return;
     }
+
     console.log('message', message);
     if (message.type == 'success') {
       if (typeof message.data == 'string') {
@@ -160,9 +186,51 @@ export default function PartySystemProvider({
       } else if (typeof message.data == 'object') {
         switch (message.data?.type) {
           case 'party':
-            setSystemState(state => {
-              return { ...state, currentPartyInfo: message.data };
-            });
+            console.log('query party');
+            if (message.data?.id) {
+              let partyData = message?.data as PartyInfo;
+              const partyImage = await get_place_photo_client(
+                partyData?.place_id,
+              );
+              // inject image into party data
+              partyData = {
+                ...partyData,
+                image: partyImage,
+              };
+
+              // if user is in the party, set current party info to the party data
+              if (
+                partyData.members?.find(
+                  member => member.user_id == get_auth().user?.user_id,
+                )
+              ) {
+                // in the done state, clear current party info
+                if (
+                  ['finished', 'cancelled'].includes(partyData?.status ?? '')
+                ) {
+                  setSystemState(state => {
+                    return {
+                      ...state,
+                      currentPartyInfo: null,
+                      queryPartyInfo: partyData,
+                    };
+                  });
+                  return;
+                } else {
+                  setSystemState(state => {
+                    return {
+                      ...state,
+                      currentPartyInfo: partyData,
+                      queryPartyInfo: partyData,
+                    };
+                  });
+                }
+              } else {
+                setSystemState(state => {
+                  return { ...state, queryPartyInfo: partyData };
+                });
+              }
+            }
             break;
           default:
             console.error('unhandled success message data object', message);
@@ -174,8 +242,21 @@ export default function PartySystemProvider({
     } else if (message.type == 'ws') {
       console.error('unhandled service', message?.service, message?.data);
     } else if (message.type == 'party') {
-      const partyData = message?.data as PartyInfo;
+      let partyData = message?.data as PartyInfo;
 
+      const partyImage = await get_place_photo_client(partyData?.place_id);
+      // inject image into party data
+      partyData = {
+        ...partyData,
+        image: partyImage,
+      };
+      // if user is in the party, set current party info to the party data
+      if (['finished', 'cancelled'].includes(partyData?.status ?? '')) {
+        setSystemState(state => {
+          return { ...state, currentPartyInfo: null };
+        });
+        return;
+      }
       if (partyData.id) {
         setSystemState(state => {
           return { ...state, currentPartyInfo: partyData };
@@ -224,13 +305,17 @@ export default function PartySystemProvider({
     };
   }, []);
 
-  const value = useMemo(() => {
+  const value = useMemo<PartySystemContextType>(() => {
     const messenger =
       readyState == ReadyState.OPEN
         ? {
             send_msg: send,
             fetch_current_party: fetch_current_party_info,
             join_party,
+            leave_party,
+            query_party,
+            clear_query_party,
+            create_party,
           }
         : {};
 

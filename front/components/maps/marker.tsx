@@ -10,8 +10,15 @@ type MarkerProps = {
   hide?: boolean;
 };
 
-type HiwMarkerProps = MarkerProps & {
+type HiwMarkerProps = {
+  lat: number;
+  lng: number;
+  onClick?: (lat: number, lng: number, partyId: string) => void;
   active?: boolean;
+  partyId: string;
+  classname?: string;
+  children?: React.ReactNode;
+  hide?: boolean;
 };
 
 /**
@@ -57,6 +64,7 @@ export class Marker extends React.Component<MarkerProps> {
  * @param {() => void} onClick - Function to call when the marker is clicked
  * @param {React.ReactNode} children - The content to display inside the marker
  * @param {string} classname - Classname to apply to the marker
+ * @param {string} partyId - The party id
  * @param {boolean} hide - Whether the marker is hidden or not
  * @param {boolean} active - Whether the marker is active or not
  */
@@ -66,7 +74,9 @@ export class HiwMarker extends React.Component<HiwMarkerProps> {
       <Marker
         lat={this.props.lat}
         lng={this.props.lng}
-        onClick={this.props.onClick}
+        onClick={(lat, lng) =>
+          this.props.onClick?.(lat, lng, this.props.partyId)
+        }
         classname={this.props.classname}
         hide={this.props.hide}
       >
