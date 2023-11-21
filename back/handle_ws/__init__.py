@@ -137,7 +137,7 @@ class WebSocketMultiplexer:
                                 "type": "success",
                                 "data": json.loads(
                                     self.handler[request.service]
-                                    .pub_sub.channel_message[request.channel]
+                                    .pub_sub.get(request.channel)
                                     .model_dump_json()
                                 ),
                             }
