@@ -6,6 +6,7 @@ from handle_ws.client import Client
 from type.ws.response_ws import ResponseWs
 import json
 from starlette.websockets import WebSocket
+from type.ws.error import PubSubChannelError
 
 
 # test return of websocket
@@ -20,10 +21,6 @@ logging.basicConfig(level=logging.NOTSET)
 logger: Logger = Logger(__name__)
 
 Channel = Tuple[str, ...]
-
-
-class PubSubChannelError(Exception):
-    pass
 
 
 class PubSub:

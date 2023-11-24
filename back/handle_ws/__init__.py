@@ -11,7 +11,7 @@ from starlette.websockets import WebSocketState
 
 from starlette.websockets import WebSocket
 from starlette.endpoints import WebSocketEndpoint
-from pub_sub import PubSubChannelError
+from type.ws.error import PubSubChannelError
 
 logging.basicConfig(level=logging.NOTSET)
 
@@ -20,15 +20,9 @@ logger: Logger = Logger(__name__)
 
 # import Type Zone
 from handle_ws.ws_service.ws_party import PartyHandlerRequest
+from handle_ws.ws_service.ws_chat import ChatHandleRequest
 
-
-class HandleRequestError(Exception):
-    pass
-
-
-class Temp(BaseModel):
-    type: Literal["temp"] = "temp"
-    data: str
+from type.ws.error import HandleRequestError
 
 
 # import handler zone
@@ -156,7 +150,7 @@ class WebSocketMultiplexer:
             return
         except HandleRequestError as e:
             await websocket.send_json({"type": "error", "data": str(e)})
-            # await websocket.close()
+            await websocket.close()
             return
         except PubSubChannelError as e:
             await websocket.send_json({"type": "error", "data": str(e)})
