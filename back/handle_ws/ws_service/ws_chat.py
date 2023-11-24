@@ -130,7 +130,9 @@ class ChatHandler(WebSocketService[ChatHandleRequest]):
             channel: SessionPartyChannel = ("session", session_id)
             self.pub_sub.subscribe(channel, client)
 
-            join_message = JoinMessage(client.token_data.user_name)
+            join_message = JoinMessage(
+                client.token_data.first_name, client.token_data.last_name
+            )
 
             chat: Chat = self.pub_sub.get(channel).data  # type: ignore
             chat.dialogues.append(join_message)
@@ -166,7 +168,9 @@ class ChatHandler(WebSocketService[ChatHandleRequest]):
             channel: SessionPartyChannel = "session", session_id
             self.pub_sub.unsubscribe(channel, client)
 
-            leave_message = LeaveMessage(client.token_data.user_name)
+            leave_message = LeaveMessage(
+                client.token_data.first_name, client.token_data.last_name
+            )
 
             chat: Chat = self.pub_sub.get(channel).data  # type: ignore
             chat.dialogues.append(leave_message)

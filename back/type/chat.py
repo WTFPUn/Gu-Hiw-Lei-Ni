@@ -30,13 +30,13 @@ class SystemMessage(Message):
 
 
 class JoinMessage(SystemMessage):
-    def __init__(self, user_name: str) -> None:
-        super().__init__(message=f"{user_name} has joined the chat.")
+    def __init__(self, first_name: str, last_name: str) -> None:
+        super().__init__(message=f"{first_name} {last_name} has joined the chat.")
 
 
 class LeaveMessage(SystemMessage):
-    def __init__(self, user_name: str) -> None:
-        super().__init__(message=f"{user_name} has left the chat.")
+    def __init__(self, first_name: str, last_name: str) -> None:
+        super().__init__(message=f"{first_name} {last_name} has left the chat.")
 
 
 ChatMessage = Union[UserChatMessage, SystemMessage]
