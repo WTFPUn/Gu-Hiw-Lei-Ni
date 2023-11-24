@@ -193,9 +193,20 @@ class ChatHandler(WebSocketService[ChatHandleRequest]):
 
             channel: SessionPartyChannel = "session", session_id
             chat: Chat = self.pub_sub.get(channel).data  # type: ignore
-            chat.dialogues.append(request.message)
 
-            dump_dialogues = request.message.model_dump()
+            added_info_message = request.message.model_copy()
+            added_info_message.__dict__.update(
+                {
+                    "user_id": client.token_data.user_id,
+                    "user_name": client.token_data.user_name,
+                    "user_first_name": client.token_data.first_name,
+                    "user_last_name": client.token_data.last_name,
+                }
+            )
+
+            chat.dialogues.append(added_info_message)
+
+            dump_dialogues = added_info_message.model_dump()
             chat_db = self.mongo_client["GuHiw"]["Chat"].find_one_and_update(
                 {"session_id": session_id}, {"$push": {"dialogues": dump_dialogues}}
             )

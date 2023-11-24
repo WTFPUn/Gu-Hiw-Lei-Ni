@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Union, Literal, List, ClassVar
+from typing import Union, Literal, List, ClassVar, Optional
 from uuid import uuid4
 
 # import objectid
@@ -19,6 +19,9 @@ class Message(BaseModel):
 class UserChatMessage(Message):
     type: Literal["user_chat_message"] = "user_chat_message"
     user_id: str
+    user_name: Optional[str] = None
+    user_first_name: Optional[str] = None
+    user_last_name: Optional[str] = None
 
 
 class SystemMessage(Message):
