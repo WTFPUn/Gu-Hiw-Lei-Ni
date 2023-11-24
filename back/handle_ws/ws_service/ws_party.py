@@ -135,7 +135,6 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
         """
         if self.mongo_client is None:
             raise Exception("Mongo client is not set")
-
         if isinstance(request, CreatePartyRequest):
             channel: Channel = "current_party", client.token_data.user_id
             if channel in self.pub_sub.subscribers:
@@ -154,7 +153,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                 await client.callback.send_json(
                     {"success": False, "message": "Host not found"}
                 )
-                return False
+                return True
 
             party_host = User.model_validate(party_host)
             party_host.__dict__.pop("password")
@@ -200,8 +199,6 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                     "party_id": partydata.id,
                 }
             )
-
-            # Find placeID
 
         elif isinstance(request, JoinPartyRequest):
             channel = "party", request.party_id
