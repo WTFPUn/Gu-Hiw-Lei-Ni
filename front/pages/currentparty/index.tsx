@@ -14,7 +14,7 @@ import React from 'react';
 
 type PartyDetailProps = {} & WithRouterProps;
 
-class PartyDetail extends React.Component<PartyDetailProps, PartyDetailState> {
+class PartyDetail extends React.Component<PartyDetailProps> {
   static contextType?: React.Context<PartySystemContextType> =
     PartySystemContext;
   constructor(props: WithRouterProps) {

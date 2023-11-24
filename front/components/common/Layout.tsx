@@ -8,6 +8,7 @@ import Head from 'next/head';
 type LayoutProps = {
   type?: 'auth' | 'normal' | 'chat' | 'party' | 'map';
   children?: React.ReactNode;
+  title?: string;
 };
 
 /**
@@ -28,7 +29,7 @@ class Layout extends React.Component<LayoutProps> {
 
     return (
       <>
-        <Navbar type={this.props.type} />
+        <Navbar type={this.props.type} title={this.props.title} />
         <main className="min-h-[100dvh] min-w-screen overflow-x-hidden overflow-hidden bg-cream text-dark-gray">
           {this.props.children}
         </main>

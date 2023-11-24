@@ -152,8 +152,8 @@ class Navbar extends React.Component<NavbarProps> {
                         </div>
                       )}
                       {this.props.type == 'chat' && (
-                        <div className="p-4 pl-16">
-                          {this.props.title} insert title here
+                        <div className="p-4 pl-16 max-w-[88vw] text-ellipsis overflow-clip">
+                          {this.props.title}
                         </div>
                       )}
                     </div>

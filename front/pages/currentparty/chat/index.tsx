@@ -5,6 +5,8 @@ import { WithRouterProps } from 'next/dist/client/with-router';
 import { withRouter } from 'next/router';
 import React from 'react';
 import Image from 'next/image';
+import { PartySystemContext, PartySystemContextType } from '@/contexts/party';
+import { get_auth } from '@/utils/auth';
 
 type ChatBubbleProps = {
   text: string;
@@ -14,7 +16,11 @@ type ChatBubbleProps = {
   time: string;
 };
 
-function ChatBubble(props: ChatBubbleProps) {
+type SystemBubbleProps = {
+  text: string;
+};
+
+function UserChatBubble(props: ChatBubbleProps) {
   return (
     <div className={props.isMe ? 'flex flex-row-reverse' : 'flex'}>
       {!props.isMe && (
@@ -62,9 +68,23 @@ function ChatBubble(props: ChatBubbleProps) {
   );
 }
 
+function SystemChatBubble(props: SystemBubbleProps) {
+  return (
+    <div className="flex justify-center py-2">
+      <div className="flex flex-col items-center">
+        <div className="bg-[#181818A0] text-cream px-3 py-0.5 rounded-3xl text-xs">
+          {props.text}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 type PartyChatState = {};
 
 class PartyChat extends React.Component<WithRouterProps, PartyChatState> {
+  static contextType?: React.Context<PartySystemContextType> =
+    PartySystemContext;
   TextRef: React.RefObject<HTMLDivElement> | null = null;
   MessageRef: React.RefObject<HTMLDivElement> | null = null;
   constructor(props: WithRouterProps) {
@@ -79,7 +99,11 @@ class PartyChat extends React.Component<WithRouterProps, PartyChatState> {
   };
 
   handleSend = () => {
-    console.log(this.TextRef?.current?.innerText);
+    const textMessage = this.TextRef?.current?.innerText;
+    const partySystem = this.context as PartySystemContextType;
+    if (!textMessage || textMessage.length <= 0) return;
+
+    partySystem?.chat_message_party?.(textMessage);
     this.TextRef!.current!.innerText = '';
     this.MessageRef!.current!.scrollTo(0, 999999999);
     this.setFocus();
@@ -87,113 +111,41 @@ class PartyChat extends React.Component<WithRouterProps, PartyChatState> {
 
   render() {
     const { router } = this.props;
+    const partySystem = this.context as PartySystemContextType;
+    const { currentPartyInfo, currentChatSession } = partySystem;
+    const dialogues = currentChatSession?.dialogues ?? [];
+    if (router.isReady && !partySystem?.currentPartyInfo) {
+      router.push('/home');
+    }
 
     return (
-      <Layout type="chat">
+      <Layout type="chat" title={currentPartyInfo?.party_name ?? ''}>
         <div className="flex flex-col p-2 px-5 rounded-t-2xl fixed bottom-0 left-0 sm:left-[12.5%] md:left-[20%] w-screen sm:w-[75vw] md:w-[60vw]">
           <div
             className="flex flex-col gap-2 h-[90dvh] overflow-y-auto containerscroll"
             ref={this.MessageRef}
           >
             <div className="pb-24"></div>
-            <ChatBubble
-              user="what"
-              text="Hello"
-              time={'0:00'}
-              isMe={false}
-              isHost={false}
-            />
-            <ChatBubble
-              user="what"
-              text="Hello"
-              time={'0:00'}
-              isMe={false}
-              isHost={true}
-            />
-            <ChatBubble
-              user="what"
-              text="Hello"
-              time={'0:00'}
-              isMe={false}
-              isHost={false}
-            />
-            <ChatBubble
-              user="what"
-              text="Hello"
-              time={'0:00'}
-              isMe={false}
-              isHost={false}
-            />
-            <ChatBubble
-              user="what"
-              text="Hello"
-              time={'0:00'}
-              isMe={false}
-              isHost={false}
-            />
-            <ChatBubble
-              user="what"
-              text="Hello"
-              time={'0:00'}
-              isMe={false}
-              isHost={false}
-            />
-            <ChatBubble
-              user="what"
-              text="Hello"
-              time={'0:00'}
-              isMe={false}
-              isHost={false}
-            />
-            <ChatBubble
-              user="what"
-              text="Hello"
-              time={'0:00'}
-              isMe={false}
-              isHost={false}
-            />
-            <ChatBubble
-              user="what"
-              text="Hello"
-              time={'0:00'}
-              isMe={false}
-              isHost={false}
-            />
-            <ChatBubble
-              user="what"
-              text="Hello"
-              time={'0:00'}
-              isMe={false}
-              isHost={false}
-            />
-            <ChatBubble
-              user="what"
-              text="Hello"
-              time={'0:00'}
-              isMe={false}
-              isHost={false}
-            />
-            <ChatBubble
-              user="what"
-              text="Hello"
-              time={'0:00'}
-              isMe={false}
-              isHost={false}
-            />
-            <ChatBubble
-              user="what"
-              text="Hello"
-              time={'0:00'}
-              isMe={true}
-              isHost={true}
-            />
-            <ChatBubble
-              user="what"
-              text="Hello"
-              time={'0:00'}
-              isMe={false}
-              isHost={false}
-            />
+            {currentChatSession?.status == 'open' && (
+              <SystemChatBubble text="Hello" />
+            )}
+            {dialogues.map(message => {
+              return message.type == 'user_chat_message' ? (
+                <UserChatBubble
+                  user={`${message?.user_first_name} ${message?.user_last_name}`}
+                  text={message?.message}
+                  time={new Date(message?.timestamp).toLocaleTimeString([], {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hourCycle: 'h23',
+                  })}
+                  isMe={message?.user_id == get_auth().user?.user_id}
+                  isHost={message?.user_id == currentPartyInfo?.host_id}
+                />
+              ) : (
+                <SystemChatBubble text={message?.message} />
+              );
+            })}
             <div className="pb-2"></div>
           </div>
           <div className="w-full min-h-16 max-h-[16dvh] flex justify-center align-middle pb-6 pt-2">

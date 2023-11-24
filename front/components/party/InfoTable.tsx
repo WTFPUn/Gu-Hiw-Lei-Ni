@@ -29,7 +29,7 @@ class InfoTable extends React.Component<InfoTableProps> {
   render() {
     const { partyInfo } = this.props;
 
-    const members = partyInfo.members?.map(member => {
+    const members = Object.values(partyInfo.members ?? {}).map?.(member => {
       return (
         <>
           <Member {...member} /> <br />
