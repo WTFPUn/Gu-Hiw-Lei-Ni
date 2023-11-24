@@ -117,7 +117,7 @@ class WebSocketMultiplexer:
                     assert tokendata.user_id in self.clients, "Client not connected"
                     client = self.clients[tokendata.user_id]
                     if not await self.handler[request.service].handle_ws(
-                        request.data, client
+                        request.data, client, self.handler
                     ):
                         raise HandleRequestError("handle request error")
                 elif isinstance(request, PubSubChannel):

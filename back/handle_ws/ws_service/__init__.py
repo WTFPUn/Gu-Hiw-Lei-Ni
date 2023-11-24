@@ -25,7 +25,9 @@ class WebSocketService(ABC, Generic[WsRequest]):
         self.mongo_client = mongo_client
 
     @abstractmethod
-    async def handle_ws(self, request: WsRequest, client: Client) -> bool:
+    async def handle_ws(
+        self, request: WsRequest, client: Client, service: Dict[str, WebSocketService]
+    ) -> bool:
         """
         Handle websocket request.
         """

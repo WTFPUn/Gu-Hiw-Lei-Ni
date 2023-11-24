@@ -124,7 +124,12 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
 
         return R * 2 * asin(sqrt(a))
 
-    async def handle_ws(self, request: PartyHandlerRequest, client: Client) -> bool:
+    async def handle_ws(
+        self,
+        request: PartyHandlerRequest,
+        client: Client,
+        service: Dict[str, WebSocketService],
+    ) -> bool:
         """
         Handle websocket request.
         """
