@@ -22,7 +22,7 @@ class TypedDictParty(TypedDict):
 
 
 class Party(BaseModel):
-    id: Optional[str] = None
+    id: str = str(uuid4())
     party_name: str
     size: int
     description: str

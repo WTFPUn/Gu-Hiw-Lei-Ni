@@ -144,7 +144,6 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                 return True
 
             partydata = request.party
-            partydata.id = str(uuid4())
             party_host = self.mongo_client["GuHiw"]["User"].find_one(
                 {"user_id": partydata.host_id},
                 {"_id": False},
@@ -217,7 +216,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                 await client.callback.send_json(
                     {"success": False, "message": "User not found"}
                 )
-                return False
+                return True
 
             user = User.model_validate(user)
             user.__dict__.pop("password")
