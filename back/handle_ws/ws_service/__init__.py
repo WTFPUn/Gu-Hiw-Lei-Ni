@@ -17,7 +17,7 @@ class WebSocketService(ABC, Generic[WsRequest]):
 
     def __new__(cls):
         cls.pub_sub = PubSub()
-        cls.mongo_client: MongoClient = None
+        cls.mongo_client: MongoClient = None  # type: ignore
         cls.RequestType: WsRequest
         return super().__new__(cls)
 

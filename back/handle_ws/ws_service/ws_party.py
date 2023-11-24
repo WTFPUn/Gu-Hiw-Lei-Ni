@@ -285,7 +285,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             if current_party.host.user_id != user_id:  # type: ignore
                 raise Exception("Only host can close party")
 
-            delete_party_member = current_party.members
+            delete_party_member = current_party.members  # type: ignore
 
             for member_id in delete_party_member:
                 current_part_channel: Channel = "current_party", member_id
