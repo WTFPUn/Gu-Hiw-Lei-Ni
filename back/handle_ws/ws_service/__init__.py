@@ -1,4 +1,6 @@
-from typing import TypeVar, Generic
+from __future__ import annotations
+
+from typing import TypeVar, Generic, final, Dict
 from handle_ws.client import Client
 from pub_sub import PubSub
 from abc import ABC, abstractmethod
@@ -13,11 +15,11 @@ class WebSocketService(ABC, Generic[WsRequest]):
     Abstract class for websocket service.
     """
 
-    RequestType: WsRequest
-
-    def __init__(self) -> None:
-        self.pub_sub: PubSub = PubSub()
-        self.mongo_client: MongoClient | None = None
+    def __new__(cls):
+        cls.pub_sub = PubSub()
+        cls.mongo_client: MongoClient = None
+        cls.RequestType: WsRequest
+        return super().__new__(cls)
 
     def set_mongo_client(self, mongo_client) -> None:
         self.mongo_client = mongo_client
