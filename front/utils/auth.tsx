@@ -64,7 +64,10 @@ export function logout() {
 }
 
 export function get_auth() {
-  const token = localStorage.getItem('token');
+  if (typeof window === 'undefined') {
+    return { auth_status: false, user: null };
+  }
+  const token = localStorage?.getItem('token');
   if (token) {
     try {
       const decodedToken = decode_jwt<JwtDecodedToken>(token);
