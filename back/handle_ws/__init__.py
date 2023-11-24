@@ -27,15 +27,18 @@ from type.ws.error import HandleRequestError
 
 # import handler zone
 from handle_ws.ws_service.ws_party import PartyHandler
+from handle_ws.ws_service.ws_chat import ChatHandler
 
 partyHandler = PartyHandler()
+chatHandler = ChatHandler()
 
 handler: Dict[str, WebSocketService] = {
     partyHandler.__class__.__name__.lower(): partyHandler,
+    chatHandler.__class__.__name__.lower(): chatHandler,
 }
 
 MuxRequestParsing = Annotated[
-    Union[PartyHandlerRequest, Temp], Field(discriminator="type")
+    Union[PartyHandlerRequest, ChatHandleRequest], Field(discriminator="type")
 ]
 
 
