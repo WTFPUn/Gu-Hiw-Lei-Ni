@@ -32,8 +32,8 @@ class Party(BaseModel):
     lng: float
     place_id: Optional[str] = None
     location: Optional[str] = None
-    members: list[str] = []
-    created_timestamp: datetime = datetime.now()
+    members: list[User] = []
+    created_timestamp: str = str(datetime.now())
     status: Literal[
         "not_started", "in_progress", "finished", "cancelled"
     ] = "not_started"

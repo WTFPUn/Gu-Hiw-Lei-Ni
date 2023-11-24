@@ -1,7 +1,4 @@
 from __future__ import annotations
-import os
-import jwt
-import asyncio
 from uuid import uuid4
 from math import sqrt, pi, cos, asin
 from pub_sub import Channel
@@ -13,8 +10,16 @@ import json
 
 from type.User import User
 from type.party import Party, ReferenceParty
-from type.client_cookie import ClientCookie
 from type.ws.response_ws import ResponseWs
+
+
+from .ws_chat import (
+    ChatHandler,
+    CreateChatRequest,
+    CloseChatRequest,
+    JoinChatRequest,
+    LeaveChatRequest,
+)
 
 
 class CreatePartyRequest(BaseModel):
@@ -29,6 +34,11 @@ class JoinPartyRequest(BaseModel):
 
 class StartPartyRequest(BaseModel):
     type: Literal["start_party"] = "start_party"
+    party_id: str
+
+
+class LeavePartyRequest(BaseModel):
+    type: Literal["leave_party"] = "leave_party"
     party_id: str
 
 
@@ -56,6 +66,7 @@ PartyHandlerRequest = Annotated[
         ClosePartyRequest,
         GetCurrentParty,
         SearchParty,
+        LeavePartyRequest,
     ],
     Field(discriminator="type"),
 ]
@@ -162,9 +173,9 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             ref_party = ReferenceParty(
                 **dumpb_copy_party,
                 host=party_host,
-                members=[party_host],
+                members={client.token_data.user_id: party_host},
             )
-            partydata.members.append(partydata.host_id)
+            partydata.members.append(party_host)
             self.mongo_client["GuHiw"]["Party"].insert_one(request.party.model_dump())
             channel: Channel = "party", str(request.party.id)
             self.pub_sub.register(channel, PartyResponse(type="party", data=ref_party))
@@ -191,6 +202,13 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                 list_party_channel,
                 ListPartyResponse(type="list_party", data=current_list_party),
             )
+
+            await service["chathandler"].handle_ws(
+                CreateChatRequest(type="create_chat", session_id=partydata.id),
+                client,
+                service,
+            )
+
             await client.callback.send_json(
                 {
                     "success": True,
@@ -224,7 +242,13 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             copy_party = party.data.model_copy()
             dumpb_copy_party = copy_party.model_dump(exclude={"members", "host_id"})
 
-            party.data.members.append(user)
+            party.data.members[user_id] = user
+
+            await service["chathandler"].handle_ws(
+                JoinChatRequest(type="join_chat", session_id=request.party_id),
+                client,
+                service,
+            )
 
             await self.pub_sub.publish(channel, party)
             access_status = self.mongo_client["GuHiw"]["Party"].find_one_and_update(
@@ -263,16 +287,62 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
 
             current_party.status = "in_progress"
 
-            await client.callback.send_json(
-                {"success": True, "message": "Successfully start party"}
+            self.mongo_client["GuHiw"]["Party"].find_one_and_update(
+                {"id": request.party_id}, {"$set": {"status": "in_progress"}}
             )
 
             await self.pub_sub.publish(
                 channel, PartyResponse(type="party", data=current_party)  # type: ignore
             )
-            self.mongo_client["GuHiw"]["Party"].find_one_and_update(
-                {"id": request.party_id}, {"$set": {"status": "in_progress"}}
+            await client.callback.send_json(
+                {"success": True, "message": "Successfully start party"}
             )
+
+        elif isinstance(request, LeavePartyRequest):
+            channel = "party", request.party_id
+            current_party: Party = self.pub_sub.get(channel).data  # type: ignore
+
+            if current_party.status == "in_progress":  # type: ignore
+                await client.callback.send_json(
+                    {"success": False, "message": "Party is already started"}
+                )
+                return True
+
+            user_id = client.token_data.user_id
+            if user_id == current_party.host_id:  # type: ignore
+                await client.callback.send_json(
+                    {"success": False, "message": "Host cannot leave party"}
+                )
+                return True
+
+            # remove user from chats
+            chat_handle_result = await service["chathandler"].handle_ws(
+                LeaveChatRequest(type="leave_chat", session_id=request.party_id),
+                client,
+                service,
+            )
+
+            if not chat_handle_result:
+                await client.callback.send_json(
+                    {"success": False, "message": "Chat does not exist"}
+                )
+                return True
+
+            # remove user from party
+            current_party.members.pop(user_id)  # type: ignore
+            update_result = self.mongo_client["GuHiw"]["Party"].find_one_and_update(
+                {"id": request.party_id}, {"$pull": {"members": user_id}}
+            )
+
+            if update_result is None:
+                await client.callback.send_json(
+                    {"success": False, "message": "Party does not exist"}
+                )
+                return True
+
+            channel = "current_party", user_id
+            self.pub_sub.unregister(channel)
+
         elif isinstance(request, ClosePartyRequest):
             channel = "party", request.party_id
             current_party: Party = self.pub_sub.channel_message[channel].data  # type: ignore
@@ -280,6 +350,21 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
 
             if current_party.host.user_id != user_id:  # type: ignore
                 raise Exception("Only host can close party")
+
+            close_chat_status = await service["chathandler"].handle_ws(
+                CloseChatRequest(type="close_chat", session_id=request.party_id),
+                client,
+                service,
+            )
+
+            if not close_chat_status:
+                await client.callback.send_json(
+                    {
+                        "success": False,
+                        "message": "Chat does not exist or chat is already closed",
+                    }
+                )
+                return True
 
             delete_party_member = current_party.members  # type: ignore
 
@@ -292,7 +377,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                 {"id": request.party_id}, {"$set": {"status": "finished"}}
             )
 
-            if access_status:
+            if not access_status:
                 await client.callback.send_json(
                     {
                         "success": False,
@@ -326,7 +411,6 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             await client.callback.send_json({"parties": in_radius_party})
 
         else:
-            # raise Exception("Unknown request type")
             return False
         # request =  self.RequestType.
         return True
