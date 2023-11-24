@@ -80,32 +80,36 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
           partySystem?.create_party?.(partyData as unknown as PartyInfo);
 
           // Verifying if create party successfully
-          const MAXATTEMPTS = 10;
+          const MAXATTEMPTS = 3;
           let attempts = 0;
           let done = false;
 
-          this.checkInterval = setInterval(() => {
-            console.log('still checking result');
+          this.checkInterval = setInterval(
+            partySystem => {
+              console.log('still checking result');
 
-            partySystem.fetch_current_party?.();
-            if (partySystem.currentPartyInfo) {
-              attempts = 11; // to prevent it from being cleared again
-              done = true;
-              this.setState({ submitted: false });
-              this.props.router.push('/currentparty');
-              return;
-            } else if (
-              attempts >= MAXATTEMPTS &&
-              !partySystem.currentPartyInfo &&
-              done == false
-            ) {
-              clearInterval(this.checkInterval);
-              // alert('Failed to create party');
-              this.setState({ submitted: false });
-              return;
-            }
-            attempts++;
-          }, 2000);
+              partySystem.fetch_current_party?.();
+              if (partySystem.currentPartyInfo) {
+                attempts = 11; // to prevent it from being cleared again
+                done = true;
+                this.setState({ submitted: false });
+                this.props.router.push('/currentparty');
+                return;
+              } else if (
+                attempts >= MAXATTEMPTS &&
+                !partySystem.currentPartyInfo &&
+                done == false
+              ) {
+                clearInterval(this.checkInterval);
+                // alert('Failed to create party');
+                this.setState({ submitted: false });
+                return;
+              }
+              attempts++;
+            },
+            2000,
+            partySystem,
+          );
         }
       } catch (e: any) {
         alert(e.message);
