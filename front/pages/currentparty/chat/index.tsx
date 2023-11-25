@@ -72,7 +72,7 @@ function SystemChatBubble(props: SystemBubbleProps) {
   return (
     <div className="flex justify-center py-2">
       <div className="flex flex-col items-center">
-        <div className="bg-[#181818A0] text-cream px-3 py-0.5 rounded-3xl text-xs">
+        <div className="bg-[#181818A0] text-cream px-3 py-0.5 rounded-3xl text-xs text-center">
           {props.text}
         </div>
       </div>
@@ -126,8 +126,10 @@ class PartyChat extends React.Component<WithRouterProps, PartyChatState> {
             ref={this.MessageRef}
           >
             <div className="pb-24"></div>
-            {currentChatSession?.status == 'open' && (
-              <SystemChatBubble text="Hello" />
+            {currentChatSession?.status == 'open' ? (
+              <SystemChatBubble text="Please be respectful to other user in the party!" />
+            ) : (
+              <SystemChatBubble text="Connecting to chat, please wait." />
             )}
             {dialogues.map(message => {
               return message.type == 'user_chat_message' ? (

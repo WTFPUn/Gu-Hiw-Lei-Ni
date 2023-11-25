@@ -242,7 +242,10 @@ export default function PartySystemProvider({
   const leave_party = () => {
     if (systemState?.currentPartyInfo?.id) {
       console.log('leaving party');
-      send('ws', 'partyhandler', { type: 'leave_party' });
+      send('ws', 'partyhandler', {
+        type: 'leave_party',
+        party_id: systemState?.currentPartyInfo?.id,
+      });
     }
   };
 
@@ -305,7 +308,7 @@ export default function PartySystemProvider({
   const handle_socket_message = async () => {
     const message = lastJsonMessage as any;
     // if message is null or undefined or invalid
-    if (!message?.type) {
+    if (!(message?.type || typeof message?.success == 'boolean')) {
       console.log('unhandled message', message);
       return;
     }
@@ -314,6 +317,7 @@ export default function PartySystemProvider({
     // handling success response
     if (message.type == 'success') {
       if (typeof message.data == 'string') {
+        // handling ws connect success message
         switch (message?.data) {
           case 'connected':
           case 'reconnected':
@@ -425,6 +429,27 @@ export default function PartySystemProvider({
         setSystemState(state => {
           return { ...state, currentChatSession: null };
         });
+      }
+    } else if (message.success == true) {
+      // handling user action success message
+      switch (message?.message) {
+        case 'Successfully leave party':
+          console.log('successfully left party');
+          fetch_current_party();
+          setSystemState(state => {
+            return { ...state, currentChatSession: null };
+          });
+          break;
+      }
+    } else if (message.success == false) {
+      // handling user action success message
+      switch (message?.message) {
+        case 'User is not currently in party':
+          console.log('user is not currently in party');
+          setSystemState(state => {
+            return { ...state, currentPartyInfo: null };
+          });
+          break;
       }
     }
   };

@@ -339,6 +339,10 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                     {"success": False, "message": "Party does not exist"}
                 )
                 return True
+              
+            await client.callback.send_json(
+                {"success": True, "message": "Successfully leave party"}
+            )
 
             channel = "current_party", user_id
             self.pub_sub.unregister(channel)
