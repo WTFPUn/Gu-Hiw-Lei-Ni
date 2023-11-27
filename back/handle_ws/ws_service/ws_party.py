@@ -195,7 +195,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             )
             list_party_channel: Channel = ("list_party",)
 
-            current_list_party: ListPartyPositionMessage = self.pub_sub.get(list_party_channel).data  # type: ignore
+            current_list_party: ListPartyPositionMessage = self.pub_sub.channel_message[list_party_channel].data  # type: ignore
             current_list_party.list_party[partydata.id] = party_position
 
             await self.pub_sub.publish(
@@ -219,7 +219,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
 
         elif isinstance(request, JoinPartyRequest):
             channel = "party", request.party_id
-            party: PartyResponse = self.pub_sub.get(channel)  # type: ignore
+            party: PartyResponse = self.pub_sub.channel_message[channel]  # type: ignore
             size = party.data.size
             if size <= len(party.data.members):
                 await client.callback.send_json(
@@ -277,7 +277,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
 
         elif isinstance(request, StartPartyRequest):
             channel = "party", request.party_id
-            current_party: ReferenceParty = self.pub_sub.get(channel).data  # type: ignore
+            current_party: ReferenceParty = self.pub_sub.channel_message[channel].data  # type: ignore
 
             data = client.token_data
 
@@ -339,7 +339,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                     {"success": False, "message": "Party does not exist"}
                 )
                 return True
-
+              
             await client.callback.send_json(
                 {"success": True, "message": "Successfully leave party"}
             )
@@ -349,7 +349,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
 
         elif isinstance(request, ClosePartyRequest):
             channel = "party", request.party_id
-            current_party: Party = self.pub_sub.get(channel).data  # type: ignore
+            current_party: Party = self.pub_sub.channel_message[channel].data  # type: ignore
             user_id = client.token_data.user_id
 
             if current_party.host.user_id != user_id:  # type: ignore
@@ -395,11 +395,16 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
 
         elif isinstance(request, GetCurrentParty):
             channel = "current_party", client.token_data.user_id
-            current_party: UserPartyMessage = self.pub_sub.get(channel).data  # type: ignore
+            if channel not in self.pub_sub.channel_message:
+                await client.callback.send_json(
+                    {"success": False, "message": "User is not currently in party"}
+                )
+                return True
+            current_party: UserPartyMessage = self.pub_sub.channel_message[channel].data  # type: ignore
             current_party_id = current_party.party_id
 
             channel = "party", current_party_id
-            response: PartyResponse = self.pub_sub.get(channel)  # type: ignore
+            response: PartyResponse = self.pub_sub.channel_message[channel]  # type: ignore
             dump = json.loads(response.model_dump_json())
             await client.callback.send_json(dump)
             return True
@@ -420,7 +425,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
 
         items: List[str] = []
 
-        list_party = self.pub_sub.get(("list_party",)).data.list_party  # type: ignore
+        list_party = self.pub_sub.channel_message[("list_party",)].data.list_party  # type: ignore
 
         if isinstance(list_party, ListPartyPositionMessage):
             for party_id, party_info in list_party.list_party.items():
