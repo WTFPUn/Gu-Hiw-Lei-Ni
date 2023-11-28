@@ -4,7 +4,6 @@ import DropdownForm from '@/components/form/DropdownForm';
 import TextForm from '@/components/form/TextForm';
 import InfoTable from '@/components/party/InfoTable';
 import {
-  CreatePartyData,
   PartyInfo,
   PartySystemContext,
   PartySystemContextType,

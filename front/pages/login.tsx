@@ -14,7 +14,7 @@ class Login extends React.Component<WithRouterProps, {}> {
     this.formRef = React.createRef();
   }
 
-  async submitForm(e: React.SyntheticEvent) {
+  async submit_form(e: React.SyntheticEvent) {
     e.preventDefault();
     const form = this.formRef.current;
     if (form) {
@@ -78,7 +78,7 @@ class Login extends React.Component<WithRouterProps, {}> {
               text="Login"
               primary
               onClick={e => {
-                this.submitForm(e);
+                this.submit_form(e);
               }}
             />
           </div>
