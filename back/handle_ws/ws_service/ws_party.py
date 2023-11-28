@@ -339,7 +339,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                     {"success": False, "message": "Party does not exist"}
                 )
                 return True
-              
+
             await client.callback.send_json(
                 {"success": True, "message": "Successfully leave party"}
             )
@@ -375,6 +375,15 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             for member_id in delete_party_member:
                 current_part_channel: Channel = "current_party", member_id
                 self.pub_sub.unregister(current_part_channel)
+
+            channel = "party", request.party_id
+            current_party: Party = self.pub_sub.get(channel).data  # type: ignore
+
+            current_party.status = "finished"
+
+            await self.pub_sub.publish(
+                channel, PartyResponse(type="party", data=current_party)  # type: ignore
+            )
 
             self.pub_sub.unregister(channel)
             access_status = self.mongo_client["GuHiw"]["Party"].find_one_and_update(
