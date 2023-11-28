@@ -294,6 +294,10 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             await self.pub_sub.publish(
                 channel, PartyResponse(type="party", data=current_party)  # type: ignore
             )
+
+            channel = "party", request.party_id
+            current_party: Party = self.pub_sub.get(channel).data  # type: ignore
+
             await client.callback.send_json(
                 {"success": True, "message": "Successfully start party"}
             )
