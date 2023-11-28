@@ -75,14 +75,18 @@ class PartyDetail extends React.Component<PartyDetailProps, PartyDetailState> {
               <img
                 src={currentPartyInfo?.image ?? '/meat.png'}
                 className="w-full h-full object-cover rounded-sm"
+                data-test="party-img"
               />
             </div>
             <div className="flex flex-col justify-center items-center pt-6 pb-2 ">
-              <div className="text-2xl font-semibold">
+              <div className="text-2xl font-semibold" data-test="party-name">
                 {currentPartyInfo?.party_name}
               </div>
               {currentPartyInfo?.created_timestamp && (
-                <div className="text-md text-light-gray">
+                <div
+                  className="text-md text-light-gray"
+                  data-test="party-timestamp"
+                >
                   {new Date(
                     currentPartyInfo?.created_timestamp,
                   ).toLocaleString()}
@@ -113,11 +117,13 @@ class PartyDetail extends React.Component<PartyDetailProps, PartyDetailState> {
                   text="Start Party"
                   primary
                   onClick={this.handle_start_party}
+                  data-test="start-party-btn"
                 />
                 <Button
                   text="Cancel Party"
                   danger
                   onClick={this.handle_close_party}
+                  data-test="cancel-party-btn"
                 />
               </>
             )}
@@ -127,6 +133,7 @@ class PartyDetail extends React.Component<PartyDetailProps, PartyDetailState> {
                   text="End Party"
                   danger
                   onClick={this.handle_close_party}
+                  data-test="end-party-btn"
                 />
               </>
             )}
@@ -134,6 +141,7 @@ class PartyDetail extends React.Component<PartyDetailProps, PartyDetailState> {
               text="Chat"
               primary={!isHost}
               onClick={() => router.push('/currentparty/chat')}
+              data-test="chat-party-btn"
             />
             {/* <Button text="Leave" danger onClick={() => router.push('/home')} /> */}
           </div>

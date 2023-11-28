@@ -12,6 +12,7 @@ type TextFormProps = {
   min?: string;
   max?: string;
   number?: boolean;
+  'data-test'?: string;
 };
 
 type TextFormState = {
@@ -76,6 +77,7 @@ class TextForm extends React.Component<TextFormProps, TextFormState> {
         name={this.props.name}
         min={this.props.min}
         max={this.props.max}
+        data-test={this.props['data-test']}
         onChange={e => {
           this.setState((state: TextFormState) => {
             const newState: TextFormState = {

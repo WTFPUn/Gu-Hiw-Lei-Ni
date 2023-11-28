@@ -161,18 +161,21 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
               text="Location"
               name="location"
               value={address as string}
+              data-test="location"
             />
             <TextForm
               text="Party Name"
               placeholder="Enter name"
               required
               name="partyname"
+              data-test="party-name"
             />
             <TextForm
               text="Description"
               placeholder="Enter short description"
               required
               name="party description"
+              data-test="party-description"
             />
             <DropdownForm
               text="Budget"
@@ -184,6 +187,7 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
                 { text: '$$$', value: 'medium' },
                 { text: '$$$$$', value: 'high' },
               ]}
+              data-test="budget"
             />
             <TextForm
               text="Party Size"
@@ -193,6 +197,7 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
               number
               required
               name="partysize"
+              data-test="party-size"
             />
           </div>
 
@@ -202,9 +207,14 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
                 text="Create Party"
                 primary
                 onClick={e => this.submit_form(e)}
+                data-test="create-party-btn"
               />
             ) : (
-              <Button text="Please Wait" onClick={e => {}} />
+              <Button
+                text="Please Wait"
+                onClick={e => {}}
+                data-test="wait-party-btn"
+              />
             )}
           </div>
         </form>

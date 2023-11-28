@@ -12,13 +12,14 @@ function Member(props: {
   last_name: string;
 }) {
   return (
-    <div className="flex gap-2 items-center">
+    <div className="flex gap-2 items-center" data-test="member">
       <img
         src={props.img ?? '/meat.png'}
         alt=""
         className="w-8 h-8 bg-slate-500 rounded-full"
+        data-test="member-img"
       />
-      <div className="text-sm font-medium">
+      <div className="text-sm font-medium" data-test="member-name">
         {props.first_name + ' ' + props.last_name}
       </div>
     </div>

@@ -22,7 +22,7 @@ class ImageUploadForm extends Component<
     };
   }
 
-  handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  handle_image_change = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files && event.target.files[0];
     if (file) {
       const reader = new FileReader();
@@ -49,10 +49,10 @@ class ImageUploadForm extends Component<
           />
         </label>
         <input
-          id="profile-image-upload"
+          data-test="image-upload"
           type="file"
           accept="image/*"
-          onChange={this.handleImageChange}
+          onChange={this.handle_image_change}
           style={{ display: 'none' }}
         />
       </div>
