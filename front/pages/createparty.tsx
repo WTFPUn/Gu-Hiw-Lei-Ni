@@ -34,7 +34,7 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
     this.formRef = React.createRef();
   }
 
-  async submitForm(e: React.SyntheticEvent) {
+  async submit_form(e: React.SyntheticEvent) {
     e.preventDefault();
     const form = this.formRef.current;
     if (!this.check_valid_create_location()) {
@@ -81,28 +81,28 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
           // Verifying if create party successfully
           const MAXATTEMPTS = 3;
           let attempts = 0;
-          let done = false;
 
           this.checkInterval = setInterval(
             partySystem => {
               console.log('still checking result');
 
-              partySystem.fetch_current_party?.();
               if (partySystem.currentPartyInfo) {
                 attempts = 11; // to prevent it from being cleared again
-                done = true;
                 this.setState({ submitted: false });
                 this.props.router.push('/currentparty');
                 return;
               } else if (
                 attempts >= MAXATTEMPTS &&
-                !partySystem.currentPartyInfo &&
-                done == false
+                !partySystem.currentPartyInfo
               ) {
-                clearInterval(this.checkInterval);
-                // alert('Failed to create party');
                 this.setState({ submitted: false });
                 return;
+              } else if (
+                attempts < MAXATTEMPTS &&
+                !partySystem.currentPartyInfo
+              ) {
+                partySystem.fetch_current_party?.();
+                clearInterval(this.checkInterval);
               }
               attempts++;
             },
@@ -153,7 +153,7 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
         </h2>
         <form
           ref={this.formRef}
-          onSubmit={e => this.submitForm(e)}
+          onSubmit={e => this.submit_form(e)}
           className="flex flex-col justify-center align-middle items-center content-center"
         >
           <div className="h-full pt-16 flex flex-col gap-4 w-3/4">
@@ -201,7 +201,7 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
               <Button
                 text="Create Party"
                 primary
-                onClick={e => this.submitForm(e)}
+                onClick={e => this.submit_form(e)}
               />
             ) : (
               <Button text="Please Wait" onClick={e => {}} />

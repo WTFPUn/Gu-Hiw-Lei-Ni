@@ -10,7 +10,7 @@ import Button from '@/components/common/Button';
 import InfoTable from '@/components/party/InfoTable';
 import { withRouter } from 'next/router';
 import { WithRouterProps } from '@/utils/router';
-import { WithAuthProps, withAuth } from '@/utils/auth';
+import { WithAuthProps, get_auth, withAuth } from '@/utils/auth';
 import DrawerContainer, {
   DrawerContainerProps,
 } from '@/components/common/DrawerContainer';
@@ -63,6 +63,9 @@ class Home extends React.Component<HomeProps, HomeState> {
     this.setState({
       showAll: !this.state.showAll,
     });
+    (this.context as PartySystemContextType)?.join_party?.(
+      'ac269390-6421-4dee-9e20-dc8fc3bdb12a',
+    );
   };
 
   handle_click_marker = (lat: number, lng: number, partyId: string) => {
@@ -84,6 +87,11 @@ class Home extends React.Component<HomeProps, HomeState> {
   };
 
   handle_join_party = () => {};
+  handle_leave_party = () => {
+    const partySystem = this.context as PartySystemContextType;
+    partySystem.leave_party?.();
+    this.reset_selected_marker();
+  };
 
   reset_selected_marker = () => {
     const { clear_query_party } = this.context as PartySystemContextType;
@@ -515,18 +523,21 @@ class Home extends React.Component<HomeProps, HomeState> {
                           />
 
                           <div className="pb-4 pt-4 w-full flex flex-col gap-2">
-                            {!currentPartyInfo && currentLocation && (
-                              <Button
-                                text="Join"
-                                primary
-                                onClick={() =>
-                                  partySystem.join_party?.(
-                                    'f136db1e-c5f3-49b9-b5f2-7216366bab9c',
-                                  )
-                                }
-                              />
-                            )}
-
+                            {/* not in party */}
+                            {!currentPartyInfo &&
+                              queryPartyInfo?.status == 'not_started' &&
+                              currentLocation && (
+                                <Button
+                                  text="Join"
+                                  primary
+                                  onClick={() =>
+                                    partySystem.join_party?.(
+                                      'f136db1e-c5f3-49b9-b5f2-7216366bab9c',
+                                    )
+                                  }
+                                />
+                              )}
+                            {/* current party buttons */}
                             {currentPartyInfo?.id ===
                               selectedMarker?.party_id && (
                               <>
@@ -535,11 +546,15 @@ class Home extends React.Component<HomeProps, HomeState> {
                                   onClick={() => router.push('/currentparty')}
                                   primary
                                 />
-                                <Button
-                                  text="Leave"
-                                  danger
-                                  onClick={() => partySystem.leave_party?.()}
-                                />
+                                {/* if not host, user can leave */}
+                                {currentPartyInfo?.host?.user_id !=
+                                  get_auth().user?.user_id && (
+                                  <Button
+                                    text="Leave"
+                                    danger
+                                    onClick={this.handle_leave_party}
+                                  />
+                                )}
                               </>
                             )}
                           </div>

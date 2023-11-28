@@ -146,21 +146,21 @@ export type PartySystemContextType = {
    * @param message - The message to send.
    */
   chat_message_party?: (message: string) => void;
+  /**
+   * Starts a party.
+   * @requires currentPartyInfo
+   */
+  start_party?: () => void;
+  /**
+   * Closes a party.
+   * @requires currentPartyInfo
+   */
+  close_party?: () => void;
 };
 
 export const PartySystemContext = React.createContext<PartySystemContextType>(
   {},
 );
-
-export interface JoinPartyData {
-  type: 'join_party';
-  party_id: string;
-}
-
-export interface CreatePartyData {
-  type: 'create_party';
-  party: PartyInfo;
-}
 
 /**
  * PartyInfoProvider
@@ -259,14 +259,20 @@ export default function PartySystemProvider({
   const close_party = () => {
     if (systemState?.currentPartyInfo?.id) {
       console.log('closing party');
-      send('ws', 'partyhandler', { type: 'close_party' });
+      send('ws', 'partyhandler', {
+        type: 'close_party',
+        party_id: systemState?.currentPartyInfo?.id,
+      });
     }
   };
 
   const start_party = () => {
     if (systemState?.currentPartyInfo?.id) {
       console.log('starting party');
-      send('ws', 'partyhandler', { type: 'start_party' });
+      send('ws', 'partyhandler', {
+        type: 'start_party',
+        party_id: systemState?.currentPartyInfo?.id,
+      });
     }
   };
 
@@ -342,7 +348,6 @@ export default function PartySystemProvider({
                 ...partyData,
                 image: partyImage,
               };
-
               // if user is in the party, set current party info to the party data
               if (
                 Object.values(partyData?.members ?? {}).find(
@@ -408,8 +413,8 @@ export default function PartySystemProvider({
           return { ...state, currentPartyInfo: null };
         });
         return;
-      }
-      if (partyData.id) {
+      } else if (partyData.id) {
+        // is valid party with id
         setSystemState(state => {
           return { ...state, currentPartyInfo: partyData };
         });
@@ -425,7 +430,7 @@ export default function PartySystemProvider({
           return { ...state, currentChatSession: chatSessionData };
         });
       } else {
-        console.log('unhandled chat session', chatSessionData);
+        console.error('unhandled chat session', chatSessionData);
         setSystemState(state => {
           return { ...state, currentChatSession: null };
         });
@@ -475,6 +480,7 @@ export default function PartySystemProvider({
     }
   };
 
+  // handle incoming socket message
   React.useEffect(() => {
     handle_socket_message();
   }, [lastJsonMessage]);
@@ -494,12 +500,13 @@ export default function PartySystemProvider({
     };
   }, []);
 
+  // value that is return to the context
+  // this value is memoized to prevent unnecessary rerender
   const value = useMemo<PartySystemContextType>(() => {
     const isConnected = readyState == ReadyState.OPEN;
     const isInParty = systemState?.currentPartyInfo != null;
     const isHost =
-      systemState?.currentPartyInfo?.host_id == get_auth().user?.user_id;
-    // const isQueryingParty = systemState?.queryPartyInfo != null;
+      systemState?.currentPartyInfo?.host?.user_id == get_auth().user?.user_id;
 
     const userCommand = isConnected
       ? {
