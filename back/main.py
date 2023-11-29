@@ -10,6 +10,7 @@ from uvicorn import Config, Server
 from logging import Logger
 from handle_req.maps import Maps
 from handle_req.auth import Auth
+from handle_req.profile import Profile
 from handle_ws import WebSocketMultiplexer
 from pymongo import MongoClient
 
@@ -45,8 +46,13 @@ async def main() -> None:
     map.load_mongo_client(mongo_client)
     map.load_google_api_key(os.getenv("GOOGLE_API_KEY"))  # type: ignore
 
+    profile = Profile(mongo_client)
+    profile.load_mongo_client(mongo_client)
+    profile.load_google_api_key(os.getenv("GOOGLE_API_KEY"))  # type: ignore
+
     app.routes.extend(auth.route())
     app.routes.extend(map.route())
+    app.routes.extend(profile.route())
 
     # init mux
     mux = WebSocketMultiplexer(mongo_client)
