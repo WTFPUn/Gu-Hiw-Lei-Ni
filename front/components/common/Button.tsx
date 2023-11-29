@@ -5,6 +5,7 @@ type ButtonProps = {
   onClick?: (e: React.MouseEvent<HTMLElement>) => void;
   primary?: boolean;
   danger?: boolean;
+  'data-test'?: string;
 };
 
 /**
@@ -33,6 +34,7 @@ class Button extends React.Component<ButtonProps, {}> {
       text-sm font-normal 
       `}
         onClick={this.props.onClick}
+        data-test={this.props['data-test']}
       >
         {this.props.text}
       </button>

@@ -16,7 +16,7 @@ class Register extends React.Component<RegisterProps, {}> {
     this.formRef = React.createRef();
   }
 
-  async submitForm(e: React.SyntheticEvent) {
+  async submit_form(e: React.SyntheticEvent) {
     e.preventDefault();
     const form = this.formRef.current;
     if (form) {
@@ -72,7 +72,7 @@ class Register extends React.Component<RegisterProps, {}> {
         <form
           ref={this.formRef}
           className="flex flex-col justify-center align-middle items-center content-center"
-          onSubmit={e => this.submitForm(e)}
+          onSubmit={e => this.submit_form(e)}
         >
           <div className="h-full pt-16 flex flex-col gap-4 w-3/4">
             <div className="flex justify-center">
@@ -83,18 +83,21 @@ class Register extends React.Component<RegisterProps, {}> {
               placeholder="Enter first name"
               required
               name="firstName"
+              data-test="first-name"
             />
             <TextForm
               text="Last name"
               placeholder="Enter Last name"
               required
               name="lastName"
+              data-test="last-name"
             />
             <TextForm
               text="Username"
               placeholder="Enter Username"
               required
               name="username"
+              data-test="username"
             />
             <TextForm
               text="Password"
@@ -102,6 +105,7 @@ class Register extends React.Component<RegisterProps, {}> {
               required
               password
               name="password"
+              data-test="password"
             />
             <TextForm
               text="Confirm Password"
@@ -109,13 +113,18 @@ class Register extends React.Component<RegisterProps, {}> {
               required
               password
               name="confirmPassword"
+              data-test="confirm-password"
             />
           </div>
 
           <div className="py-24 flex flex-col w-3/4 justify-center content-center gap-2">
             <div className="text-center font-normal">
               {'Already have an account?   '}
-              <Link href="/login" className="font-semibold">
+              <Link
+                href="/login"
+                data-test="login-page-btn"
+                className="font-semibold"
+              >
                 Login
               </Link>
             </div>
@@ -123,8 +132,9 @@ class Register extends React.Component<RegisterProps, {}> {
               text="Sign up"
               primary
               onClick={e => {
-                this.submitForm(e);
+                this.submit_form(e);
               }}
+              data-test="register-btn"
             />
           </div>
         </form>

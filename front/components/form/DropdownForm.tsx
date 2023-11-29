@@ -11,6 +11,7 @@ type DropdownFormProps = {
     value: string;
     text: string;
   }[];
+  'data-test'?: string;
   onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
 };
 
@@ -66,6 +67,7 @@ class DropdownForm extends React.Component<
         placeholder={this.props.placeholder ? this.props.placeholder : ''}
         value={this.state.value}
         name={this.props.name}
+        data-test={this.props['data-test']}
         onChange={e => {
           if (this.props.onChange) {
             this.props.onChange(e);
@@ -90,6 +92,11 @@ class DropdownForm extends React.Component<
               <option
                 key={index + 'selectdropdown' + this.props.text}
                 value={option.value}
+                data-test={
+                  this.props['data-test']
+                    ? this.props['data-test'] + '-option'
+                    : undefined
+                }
               >
                 {option.text}
               </option>

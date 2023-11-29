@@ -25,6 +25,7 @@ class AuthLayout extends React.Component<AuthLayoutProps> {
         <div
           className="absolute p-4 cursor-pointer"
           onClick={() => router.back()}
+          data-test="back-btn"
         >
           <ArrowLongLeftIcon className="h-8 w-8 text-primary" />
         </div>

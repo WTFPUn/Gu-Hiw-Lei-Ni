@@ -15,9 +15,14 @@ type TableProps = {
  */
 export function RowItem(props: TableRowProps) {
   return (
-    <tr>
-      <td className="font-medium py-2 pr-2 align-top">{props.name}</td>
-      <td>{props.children}</td>
+    <tr data-test="table-row">
+      <td
+        className="font-medium py-2 pr-2 align-top"
+        data-test="table-row-main"
+      >
+        {props.name}
+      </td>
+      <td data-test="table-row-secondary">{props.children}</td>
     </tr>
   );
 }
@@ -29,9 +34,9 @@ export function RowItem(props: TableRowProps) {
  */
 export function Table(props: TableProps) {
   return (
-    <table className="text-black font-normal">
-      {props.header && <thead>{props.header}</thead>}
-      <tbody>{props.children}</tbody>
+    <table className="text-black font-normal" data-test="table-data">
+      {props.header && <thead data-test="table-header">{props.header}</thead>}
+      <tbody data-test="table-children">{props.children}</tbody>
     </table>
   );
 }

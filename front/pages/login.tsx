@@ -14,7 +14,7 @@ class Login extends React.Component<WithRouterProps, {}> {
     this.formRef = React.createRef();
   }
 
-  async submitForm(e: React.SyntheticEvent) {
+  async submit_form(e: React.SyntheticEvent) {
     e.preventDefault();
     const form = this.formRef.current;
     if (form) {
@@ -58,27 +58,34 @@ class Login extends React.Component<WithRouterProps, {}> {
               text="Username"
               placeholder="Enter Username"
               name="username"
+              data-test="username"
             />
             <TextForm
               text="Password"
               placeholder="Enter Password"
               password
               name="password"
+              data-test="password"
             />
           </div>
 
           <div className="absolute bottom-10 flex flex-col w-3/4 justify-center content-center gap-2">
             <div className="text-center font-normal">
               {'Don’t have an account?    '}
-              <Link href="/register" className="font-semibold">
+              <Link
+                href="/register"
+                data-test="register-link"
+                className="font-semibold"
+              >
                 Register
               </Link>
             </div>
             <Button
               text="Login"
               primary
+              data-test="login-btn"
               onClick={e => {
-                this.submitForm(e);
+                this.submit_form(e);
               }}
             />
           </div>

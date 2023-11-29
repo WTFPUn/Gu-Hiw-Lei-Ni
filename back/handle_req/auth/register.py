@@ -17,7 +17,7 @@ class RegisterRequestBody(BaseModel):
     # image: str
 
 
-class Register(HandleRequest[RegisterRequestBody, None]):
+class Register(HandleRequest[RegisterRequestBody, None]): 
     async def _handle(self) -> Response:
         self.logger.debug(self.body)
         collection = self.mongo_client["GuHiw"]["User"]

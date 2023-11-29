@@ -7,7 +7,6 @@ login: Login = Login(["POST"], LoginRequestBody)  # type: ignore
 register: Register = Register(["POST"], RegisterRequestBody)  # type: ignore
 validatetoken: ValidateToken = ValidateToken(["POST"], ValidateTokenRequest)  # type: ignore
 
-
 class Auth(EndpointCollector):
     pass
 

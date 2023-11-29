@@ -22,13 +22,17 @@ type SystemBubbleProps = {
 
 function UserChatBubble(props: ChatBubbleProps) {
   return (
-    <div className={props.isMe ? 'flex flex-row-reverse' : 'flex'}>
+    <div
+      className={props.isMe ? 'flex flex-row-reverse' : 'flex'}
+      data-test="user-bubble"
+    >
       {!props.isMe && (
         <div className="pr-2.5">
           <div className="rounded-full bg-primary p-0.5 -translate-y-1">
             <img
               src="/meat.png"
               className="w-7 h-7 object-cover rounded-full "
+              data-test="user-bubble-img"
             />
           </div>
         </div>
@@ -37,10 +41,16 @@ function UserChatBubble(props: ChatBubbleProps) {
         {props.isMe ? (
           <>
             <div className="flex flex-row-reverse gap-2">
-              <p className="bg-secondary text-dark-gray p-2 px-4 rounded-3xl">
+              <p
+                className="bg-secondary text-dark-gray p-2 px-4 rounded-3xl"
+                data-test="user-bubble-text"
+              >
                 {props.text}
               </p>
-              <span className="text-sm text-gray-500 self-end">
+              <span
+                className="text-sm text-gray-500 self-end"
+                data-test="user-bubble-time"
+              >
                 {props.time}
               </span>
             </div>
@@ -50,14 +60,25 @@ function UserChatBubble(props: ChatBubbleProps) {
             <div className="flex gap-2">
               <div className="text-xs pb-2">{props.user}</div>
               {props.isHost && (
-                <img alt="crown" src="/crown.png" className="w-4 h-4" />
+                <img
+                  alt="crown"
+                  src="/crown.png"
+                  className="w-4 h-4"
+                  data-test="user-bubble-crown"
+                />
               )}
             </div>
             <div className="flex gap-2">
-              <p className="bg-primary text-white p-2 px-4 rounded-3xl">
+              <p
+                className="bg-primary text-white p-2 px-4 rounded-3xl"
+                data-test="user-bubble-text"
+              >
                 {props.text}
               </p>
-              <span className="text-sm text-gray-500 self-end">
+              <span
+                className="text-sm text-gray-500 self-end"
+                data-test="user-bubble-time"
+              >
                 {props.time}
               </span>
             </div>
@@ -72,7 +93,10 @@ function SystemChatBubble(props: SystemBubbleProps) {
   return (
     <div className="flex justify-center py-2">
       <div className="flex flex-col items-center">
-        <div className="bg-[#181818A0] text-cream px-3 py-0.5 rounded-3xl text-xs text-center">
+        <div
+          className="bg-[#181818A0] text-cream px-3 py-0.5 rounded-3xl text-xs text-center"
+          data-test="system-bubble"
+        >
           {props.text}
         </div>
       </div>
@@ -124,6 +148,7 @@ class PartyChat extends React.Component<WithRouterProps, PartyChatState> {
           <div
             className="flex flex-col gap-2 h-[90dvh] overflow-y-auto containerscroll"
             ref={this.MessageRef}
+            data-test="chat-messages"
           >
             <div className="pb-24"></div>
             {currentChatSession?.status == 'open' ? (
@@ -157,6 +182,7 @@ class PartyChat extends React.Component<WithRouterProps, PartyChatState> {
                 className="w-full text-sm min-h-10 max-h-[10dvh] containerscroll overflow-x-auto break-words rounded-2xl border-2 border-redish bg-transparent p-2 px-4"
                 placeholder="Type a message"
                 ref={this.TextRef}
+                data-test="chat-input"
               ></div>
             </div>
             <button
@@ -164,8 +190,9 @@ class PartyChat extends React.Component<WithRouterProps, PartyChatState> {
               onClick={() => {
                 this.handleSend();
               }}
+              data-test="chat-send-btn"
             >
-              <img src="/send.png" className="h-9" />
+              <img src="/send.png" className="h-9" data-test="chat-send-icon" />
             </button>
           </div>
         </div>

@@ -4,6 +4,8 @@ type IconButtonProps = {
   img: string;
   onClick?: (e: React.MouseEvent<HTMLElement>) => void;
   text?: string;
+  'data-test'?: string;
+  disabled?: boolean;
 };
 
 /**
@@ -19,10 +21,11 @@ export default class IconButton extends React.Component<IconButtonProps> {
   render() {
     return (
       <button
+        data-test={this.props['data-test']}
         onClick={this.props.onClick}
         className="w-24 h-18 flex flex-col justify-center items-center font-normal text-xs gap-2 text-center "
       >
-        <img src={this.props.img} alt="icon-button" className="w-16 h-16 " />
+        <img src={this.props.img} alt="icon-btn" className="w-16 h-16 " />
         <span>{this.props.text}</span>
       </button>
     );

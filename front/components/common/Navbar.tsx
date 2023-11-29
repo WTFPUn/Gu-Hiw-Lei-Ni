@@ -38,7 +38,11 @@ class Navbar extends React.Component<NavbarProps> {
     const navigationItem = navigation.map(item => {
       item.active = this.props.router.pathname.includes(item.href);
       return (
-        <Link href={item.href} className="w-full ">
+        <Link
+          href={item.href}
+          className="w-full"
+          data-test={'navlink' + item.name}
+        >
           <Disclosure.Button
             key={item.name}
             as="a"
@@ -82,15 +86,20 @@ class Navbar extends React.Component<NavbarProps> {
             >
               <Disclosure.Panel className="h-screen right-0 bg-transparent absolute z-50">
                 <div className="pb-3 h-full w-[75vw] md:w-[50vw] lg:w-[30vw] bg-cream relative inset-y-0 right-0 z-[100]">
-                  <div className="relative p-3 pr-3 flex justify-start">
+                  <div
+                    className="relative p-3 pr-3 flex justify-start"
+                    data-test="nav-btn-container"
+                  >
                     <Disclosure.Button
                       as="div"
                       className="relative cursor-pointer inline-flex items-center justify-center rounded-md p-2 text-black"
+                      data-test="nav-btn"
                     >
                       {
                         <Bars3BottomLeftIcon
                           className="block h-6 w-6"
                           aria-hidden="true"
+                          data-test="nav-btn-icon"
                         />
                       }
                     </Disclosure.Button>
@@ -100,6 +109,7 @@ class Navbar extends React.Component<NavbarProps> {
                     {this.props.auth_status ? (
                       <Button
                         text="Log out"
+                        data-test="logout-btn"
                         onClick={() => {
                           logout();
                           this.props.router.push('/').then(() => {
@@ -111,6 +121,7 @@ class Navbar extends React.Component<NavbarProps> {
                     ) : (
                       <Button
                         text="Log in"
+                        data-test="login-btn"
                         onClick={() => {
                           this.props.router.push('/login');
                         }}
@@ -142,17 +153,24 @@ class Navbar extends React.Component<NavbarProps> {
                         this.props.type == 'chat') && (
                         <div
                           className="absolute p-4 cursor-pointer"
+                          data-test="back-btn"
                           onClick={() => {
                             if (this.props.type == 'chat')
                               this.props.router.back();
                             else this.props.router.push('/home');
                           }}
                         >
-                          <ArrowLongLeftIcon className="h-8 w-8 text-primary" />
+                          <ArrowLongLeftIcon
+                            data-test="back-btn-icon"
+                            className="h-8 w-8 text-primary"
+                          />
                         </div>
                       )}
                       {this.props.type == 'chat' && (
-                        <div className="p-4 pl-16 max-w-[88vw] text-ellipsis overflow-clip">
+                        <div
+                          className="p-4 pl-16 max-w-[88vw] text-ellipsis overflow-clip"
+                          data-test="chat-title"
+                        >
                           {this.props.title}
                         </div>
                       )}
@@ -162,14 +180,26 @@ class Navbar extends React.Component<NavbarProps> {
                         {/* Right */}
                         {this.props.type == 'party' ||
                         this.props.type == 'chat' ? (
-                          <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md p-1.5 text-black ">
+                          <Disclosure.Button
+                            className="relative inline-flex items-center justify-center rounded-md p-1.5 text-black "
+                            data-test="nav-btn"
+                          >
                             <span className="absolute -inset-0.5" />
-                            <Bars3BottomLeftIcon className="block h-6 w-6" />
+                            <Bars3BottomLeftIcon
+                              className="block h-6 w-6"
+                              data-test="nav-btn-icon"
+                            />
                           </Disclosure.Button>
                         ) : (
-                          <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md p-1.5 text-black bg-cream shadow-sm">
+                          <Disclosure.Button
+                            className="relative inline-flex items-center justify-center rounded-md p-1.5 text-black bg-cream shadow-sm"
+                            data-test="nav-btn"
+                          >
                             <span className="absolute -inset-0.5" />
-                            <Bars3BottomLeftIcon className="block h-6 w-6" />
+                            <Bars3BottomLeftIcon
+                              className="block h-6 w-6"
+                              data-test="nav-btn-icon"
+                            />
                           </Disclosure.Button>
                         )}
                       </div>

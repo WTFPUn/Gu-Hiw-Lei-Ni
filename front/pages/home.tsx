@@ -10,7 +10,7 @@ import Button from '@/components/common/Button';
 import InfoTable from '@/components/party/InfoTable';
 import { withRouter } from 'next/router';
 import { WithRouterProps } from '@/utils/router';
-import { WithAuthProps, withAuth } from '@/utils/auth';
+import { WithAuthProps, get_auth, withAuth } from '@/utils/auth';
 import DrawerContainer, {
   DrawerContainerProps,
 } from '@/components/common/DrawerContainer';
@@ -63,6 +63,9 @@ class Home extends React.Component<HomeProps, HomeState> {
     this.setState({
       showAll: !this.state.showAll,
     });
+    (this.context as PartySystemContextType)?.join_party?.(
+      'ac269390-6421-4dee-9e20-dc8fc3bdb12a',
+    );
   };
 
   handle_click_marker = (lat: number, lng: number, partyId: string) => {
@@ -83,7 +86,35 @@ class Home extends React.Component<HomeProps, HomeState> {
     });
   };
 
+  handle_current_party_icon = () => {
+    const { currentPartyInfo } = this.context as PartySystemContextType;
+    if (currentPartyInfo)
+      this.handle_click_marker(
+        currentPartyInfo?.lat,
+        currentPartyInfo?.lng,
+        currentPartyInfo?.id,
+      );
+  };
+
+  handle_create_party_icon = () => {
+    const { currentLocation } = this.context as PartySystemContextType;
+    if (currentLocation) {
+      this.setState({
+        center: {
+          lat: currentLocation?.lat ?? 0,
+          lng: currentLocation?.lng ?? 0,
+        },
+        zoom: 16,
+        menu: 'createparty',
+      });
+    }
+  };
   handle_join_party = () => {};
+  handle_leave_party = () => {
+    const partySystem = this.context as PartySystemContextType;
+    partySystem.leave_party?.();
+    this.reset_selected_marker();
+  };
 
   reset_selected_marker = () => {
     const { clear_query_party } = this.context as PartySystemContextType;
@@ -237,7 +268,11 @@ class Home extends React.Component<HomeProps, HomeState> {
               }
             >
               {currentLocation && (
-                <Marker lat={currentLocation.lat} lng={currentLocation.lng}>
+                <Marker
+                  data-test="current-location-area"
+                  lat={currentLocation.lat}
+                  lng={currentLocation.lng}
+                >
                   <div
                     style={{
                       width: w,
@@ -255,6 +290,7 @@ class Home extends React.Component<HomeProps, HomeState> {
                     lng={location.lng}
                     onClick={this.handle_click_marker}
                     partyId={''}
+                    data-test={'hiw-' + index}
                     active={
                       selectedMarker?.lat === location.lat &&
                       selectedMarker?.lng === location.lng
@@ -263,7 +299,11 @@ class Home extends React.Component<HomeProps, HomeState> {
                 );
               })}
               {currentLocation && (
-                <Marker lat={currentLocation.lat} lng={currentLocation.lng}>
+                <Marker
+                  data-test="current-location-marker"
+                  lat={currentLocation.lat}
+                  lng={currentLocation.lng}
+                >
                   <div className="w-5 h-5 bg-blue-500 rounded-full shadow-2xl border-2 border-white translate-x-[-25%] translate-y-[-25%]" />
                 </Marker>
               )}
@@ -275,25 +315,36 @@ class Home extends React.Component<HomeProps, HomeState> {
           </div>
           <div className="absolute left-1/2 top-1/2">
             {menu == 'createparty' && (
-              <Marker lat={0} lng={0}>
+              <Marker data-test="create-marker" lat={0} lng={0}>
                 <div className="w-4 h-4 bg-red-500 rounded-full shadow-2xl border-2 border-white translate-x-[-25%] translate-y-[-25%]" />
               </Marker>
             )}
           </div>
           {/* Drawer */}
-          <div className="fixed z-40 bottom-0 w-screen">
+          <div
+            className="fixed z-40 bottom-0 w-screen"
+            data-test="drawer-holder"
+          >
             {/* not auth */}
             {this.props.auth_status == false && (
-              <DrawerContainer className="animation transition-transform transform ease-out pb-16 pt-8 flex flex-col duration-200">
+              <DrawerContainer
+                data-test="no-auth-drawer"
+                className="animation transition-transform transform ease-out pb-16 pt-8 flex flex-col duration-200"
+              >
                 <div className="text-center font-normal">
                   {'Don’t have an account?    '}
-                  <Link href="/register" className="font-semibold">
+                  <Link
+                    href="/register"
+                    data-test="register-link"
+                    className="font-semibold"
+                  >
                     Register
                   </Link>
                 </div>
                 <Button
                   text="Login"
                   primary
+                  data-test="login-btn"
                   onClick={e => {
                     this.props.router.push('/login');
                   }}
@@ -304,6 +355,7 @@ class Home extends React.Component<HomeProps, HomeState> {
             {/* main menu */}
             {auth_status == true && menu == 'main' && (
               <DrawerContainer
+                data-test="main-drawer"
                 className={classNames(
                   'animation transition-transform transform ease-out pb-16 flex flex-col duration-200 ',
                   this.state.showAll && !selectedMarker
@@ -317,14 +369,9 @@ class Home extends React.Component<HomeProps, HomeState> {
                     <IconButton
                       img={currentPartyInfo ? '/sushi.png' : '/bwsushi.png'}
                       text="Current Party"
+                      data-test="current-party-btn"
                       onClick={this.verify_party(e => {
-                        // router.push('/currentparty');
-                        if (currentPartyInfo)
-                          this.handle_click_marker(
-                            currentPartyInfo?.lat,
-                            currentPartyInfo?.lng,
-                            currentPartyInfo?.id,
-                          );
+                        this.handle_current_party_icon();
                       })}
                     />
                   }
@@ -335,19 +382,11 @@ class Home extends React.Component<HomeProps, HomeState> {
                         : '/bwrice.png'
                     }
                     text="Create Party"
+                    data-test="create-party-btn"
                     onClick={this.verify_location_permission(
                       this.verify_party(
                         e => {
-                          this.setState({
-                            center: {
-                              lat: currentLocation?.lat ?? 0,
-                              lng: currentLocation?.lng ?? 0,
-                            },
-                            zoom: 16,
-                            menu: 'createparty',
-                          });
-                          this.setState({ menu: 'createparty' });
-                          console.log(this.state);
+                          this.handle_create_party_icon();
                         },
                         { not: true },
                       ),
@@ -356,6 +395,7 @@ class Home extends React.Component<HomeProps, HomeState> {
                 </div>
                 <div className="flex flex-col gap-1">
                   <DropdownForm
+                    data-test="distance-dropdown"
                     text="Distance"
                     options={[
                       { value: '4', text: '4 km' },
@@ -373,12 +413,16 @@ class Home extends React.Component<HomeProps, HomeState> {
                       });
                     }}
                   />
-                  <div className="flex justify-between text-xs">
-                    <span>Found: 3 Party</span>
+                  <div
+                    className="flex justify-between text-xs"
+                    data-test="query-result"
+                  >
+                    <span data-test="query-result-text">Found: 3 Party</span>
                     <a
                       onClick={this.handle_show_search_location}
                       className="text-red-500 underline"
                       href="#"
+                      data-test="query-result-show-all"
                     >
                       Show All
                     </a>
@@ -389,6 +433,7 @@ class Home extends React.Component<HomeProps, HomeState> {
                       'h-[25vh] transition-opacity duration-200 ease-out',
                       this.state.showAll ? '' : 'opacity-0',
                     )}
+                    data-test="party-list-holder"
                   >
                     <PartyList>
                       <PartyItem name="Test Party" distance={0.2} />
@@ -416,10 +461,17 @@ class Home extends React.Component<HomeProps, HomeState> {
                 leaveTo="transform translate-y-full"
                 as={React.Fragment}
               >
-                <DrawerCreatePartyDiv className="h-[38vh]">
+                <DrawerCreatePartyDiv
+                  data-test="create-party-drawer"
+                  className="h-[38vh]"
+                >
                   <div className="pt-2 w-full flex flex-col gap-3">
-                    <div className=" cursor-pointer">
+                    <div
+                      className="cursor-pointer"
+                      data-test="location-text-holder"
+                    >
                       <TextForm
+                        data-test="location-text"
                         text="Location"
                         value={
                           placeInfo?.formatted_address ??
@@ -430,12 +482,13 @@ class Home extends React.Component<HomeProps, HomeState> {
                     {this.check_valid_create_location() && placeInfo ? (
                       <Button
                         text="Create Party"
+                        data-test="create-party-btn"
                         primary
                         onClick={() => {
                           router.push(
                             `/createparty?lat=${center?.lat}&lng=${
                               center?.lng
-                            }&place_id=${
+                            }&place_data-test=${
                               placeInfo.place_id
                             }&address=${encodeURIComponent(
                               placeInfo.formatted_address,
@@ -447,6 +500,7 @@ class Home extends React.Component<HomeProps, HomeState> {
                       <Button
                         text={'Please select location within 4km'}
                         danger
+                        data-test="disabled-create-party-btn"
                         onClick={() => {}}
                       />
                     )}
@@ -454,6 +508,7 @@ class Home extends React.Component<HomeProps, HomeState> {
                     <Button
                       text="Back"
                       danger
+                      data-test="back-btn"
                       onClick={() => this.setState({ menu: 'main' })}
                     />
                   </div>
@@ -479,15 +534,22 @@ class Home extends React.Component<HomeProps, HomeState> {
                         <img
                           src={queryPartyInfo?.image ?? '/meat.png'}
                           className="rounded-full border w-full h-full border-yellow bg-cover"
+                          data-test="party-img"
                         />
                       </div>
                       <div className="h-full flex flex-col overflow-y-auto container containerscroll">
                         <div className="flex flex-col justify-center items-center pt-6 pb-2 ">
-                          <div className="text-2xl font-semibold">
+                          <div
+                            className="text-2xl font-semibold"
+                            data-test="party-name"
+                          >
                             {queryPartyInfo?.party_name}
                           </div>
                           {queryPartyInfo?.created_timestamp && (
-                            <div className="text-md text-light-gray">
+                            <div
+                              className="text-md text-light-gray"
+                              data-test="party-timestamp"
+                            >
                               {new Date(
                                 queryPartyInfo?.created_timestamp,
                               ).toLocaleString()}
@@ -515,18 +577,22 @@ class Home extends React.Component<HomeProps, HomeState> {
                           />
 
                           <div className="pb-4 pt-4 w-full flex flex-col gap-2">
-                            {!currentPartyInfo && currentLocation && (
-                              <Button
-                                text="Join"
-                                primary
-                                onClick={() =>
-                                  partySystem.join_party?.(
-                                    'f136db1e-c5f3-49b9-b5f2-7216366bab9c',
-                                  )
-                                }
-                              />
-                            )}
-
+                            {/* not in party */}
+                            {!currentPartyInfo &&
+                              queryPartyInfo?.status == 'not_started' &&
+                              currentLocation && (
+                                <Button
+                                  text="Join"
+                                  primary
+                                  onClick={() =>
+                                    partySystem.join_party?.(
+                                      'f136db1e-c5f3-49b9-b5f2-7216366bab9c',
+                                    )
+                                  }
+                                  data-test="join-btn"
+                                />
+                              )}
+                            {/* current party buttons */}
                             {currentPartyInfo?.id ===
                               selectedMarker?.party_id && (
                               <>
@@ -534,12 +600,18 @@ class Home extends React.Component<HomeProps, HomeState> {
                                   text="More Information"
                                   onClick={() => router.push('/currentparty')}
                                   primary
+                                  data-test="more-info-btn"
                                 />
-                                <Button
-                                  text="Leave"
-                                  danger
-                                  onClick={() => partySystem.leave_party?.()}
-                                />
+                                {/* if not host, user can leave */}
+                                {currentPartyInfo?.host?.user_id !=
+                                  get_auth().user?.user_id && (
+                                  <Button
+                                    text="Leave"
+                                    danger
+                                    onClick={this.handle_leave_party}
+                                    data-test="leave-btn"
+                                  />
+                                )}
                               </>
                             )}
                           </div>
@@ -548,7 +620,10 @@ class Home extends React.Component<HomeProps, HomeState> {
                     </>
                   ) : (
                     <>
-                      <div className="text-center font-medium pt-2">
+                      <div
+                        className="text-center font-medium pt-2"
+                        data-test="loading-info-party"
+                      >
                         Loading
                       </div>
                     </>

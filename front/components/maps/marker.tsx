@@ -8,6 +8,8 @@ type MarkerProps = {
   children?: React.ReactNode;
   classname?: string;
   hide?: boolean;
+  'data-test'?: string;
+  id?: string;
 };
 
 type HiwMarkerProps = {
@@ -18,6 +20,7 @@ type HiwMarkerProps = {
   partyId: string;
   classname?: string;
   children?: React.ReactNode;
+  'data-test'?: string;
   hide?: boolean;
 };
 
@@ -47,6 +50,7 @@ export class Marker extends React.Component<MarkerProps> {
           this.props.onClick &&
           this.props.onClick(this.props.lat, this.props.lng)
         }
+        data-test={this.props['data-test']}
       >
         <div className="absolute -translate-x-1/4 -translate-y-1/4">
           {this.props.children}
@@ -79,6 +83,7 @@ export class HiwMarker extends React.Component<HiwMarkerProps> {
         }
         classname={this.props.classname}
         hide={this.props.hide}
+        data-test={this.props['data-test']}
       >
         {this.props.active ? (
           <img src="/meat.png" width={32} height={32} />
