@@ -51,7 +51,7 @@ describe('registering user account', () => {
     });
   });
 
-  it('should check if password is too short', () => {
+  it('should check if password is too short (< 8 character)', () => {
     const randomUser = generateUser(3);
 
     cy.log('randomly generated user', randomUser);
