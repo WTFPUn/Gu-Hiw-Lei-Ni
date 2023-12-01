@@ -19,6 +19,18 @@ type DropdownFormState = {
   value: string;
 };
 
+/**
+ * DropdownForm component
+ * @param {string} text - Text to display on the button
+ * @param {string} placeholder - Placeholder text
+ * @param {(ref: DropdownForm) => void} ref - Reference to the component
+ * @param {string} width - Width of the text form, unit in rem Ex. w-[1.5rem]
+ * @param {boolean} required - Whether the text form is required or not
+ * @param {string} name - Name of the text form
+ * @param {string} value - Value of the text form
+ * @param {string} data-test - Test id for testing
+ * @param {(e: React.ChangeEvent<HTMLSelectElement>) => void} onChange - Callback function when the value is changed
+ */
 class DropdownForm extends React.Component<
   DropdownFormProps,
   DropdownFormState

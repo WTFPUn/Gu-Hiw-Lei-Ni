@@ -63,8 +63,9 @@ class PartyDetail extends React.Component<PartyDetailProps, PartyDetailState> {
     const { currentPartyInfo, start_party, close_party } = partySystem;
 
     const isHost = currentPartyInfo?.host?.user_id == get_auth()?.user?.user_id;
-    if (router.isReady && !partySystem?.currentPartyInfo) {
-      router.push('/home');
+    if (router.isReady) {
+      if (!partySystem?.currentPartyInfo) router.push('/home');
+      else if (!get_auth().auth_status) router.push('/login');
     }
 
     return (

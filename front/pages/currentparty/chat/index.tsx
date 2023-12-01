@@ -139,8 +139,9 @@ class PartyChat extends React.Component<PartyChatProps, PartyChatState> {
     const partySystem = this.context as PartySystemContextType;
     const { currentPartyInfo, currentChatSession } = partySystem;
     const dialogues = currentChatSession?.dialogues ?? [];
-    if (router.isReady && !partySystem?.currentPartyInfo) {
-      router.push('/home');
+    if (router.isReady) {
+      if (!partySystem?.currentPartyInfo) router.push('/home');
+      else if (!get_auth().auth_status) router.push('/login');
     }
 
     return (

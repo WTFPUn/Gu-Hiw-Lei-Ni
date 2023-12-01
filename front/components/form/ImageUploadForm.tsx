@@ -10,6 +10,12 @@ type ImageUploadFormState = {
   imageUrl: string;
 };
 
+/**
+ * ImageUploadForm component
+ * @param {string} imageUrl - The url of the image
+ * @param {(file: File) => void} onImageChange - Callback function when the image is changed
+ *
+ */
 class ImageUploadForm extends Component<
   ImageUploadFormProps,
   ImageUploadFormState
