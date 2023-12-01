@@ -56,14 +56,10 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
         lng: +(this.props.router.query.lng as string),
       };
       try {
-        if (
-          partyData.party_name == '' ||
-          partyData.description == '' ||
-          partyData.location == '' ||
-          partyData.budget == '' ||
-          partyData.size == ''
-        ) {
-          throw Error('Please fill in all fields');
+        for (let fieldValue of Object.values(partyData)) {
+          if (fieldValue == '') {
+            throw Error('Please fill in all fields');
+          }
         }
         if (
           partyData?.size &&
