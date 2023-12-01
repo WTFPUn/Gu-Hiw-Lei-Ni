@@ -6,7 +6,7 @@ import { withRouter } from 'next/router';
 import React from 'react';
 import Image from 'next/image';
 import { PartySystemContext, PartySystemContextType } from '@/contexts/party';
-import { get_auth } from '@/utils/auth';
+import { WithAuthProps, get_auth, withAuth } from '@/utils/auth';
 
 type ChatBubbleProps = {
   text: string;
@@ -105,13 +105,14 @@ function SystemChatBubble(props: SystemBubbleProps) {
 }
 
 type PartyChatState = {};
+type PartyChatProps = WithRouterProps & WithAuthProps;
 
-class PartyChat extends React.Component<WithRouterProps, PartyChatState> {
+class PartyChat extends React.Component<PartyChatProps, PartyChatState> {
   static contextType?: React.Context<PartySystemContextType> =
     PartySystemContext;
   TextRef: React.RefObject<HTMLDivElement> | null = null;
   MessageRef: React.RefObject<HTMLDivElement> | null = null;
-  constructor(props: WithRouterProps) {
+  constructor(props: PartyChatProps) {
     super(props);
     this.state = {};
     this.TextRef = React.createRef();
@@ -201,4 +202,4 @@ class PartyChat extends React.Component<WithRouterProps, PartyChatState> {
   }
 }
 
-export default withRouter(PartyChat);
+export default withRouter(withAuth(PartyChat));

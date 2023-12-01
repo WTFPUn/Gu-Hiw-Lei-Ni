@@ -8,7 +8,7 @@ import {
   PartySystemContext,
   PartySystemContextType,
 } from '@/contexts/party';
-import { get_auth } from '@/utils/auth';
+import { WithAuthProps, get_auth, withAuth } from '@/utils/auth';
 import { calculateDistance } from '@/utils/map';
 import { Coords } from 'google-map-react';
 import { WithRouterProps } from 'next/dist/client/with-router';
@@ -19,14 +19,14 @@ type CreatePartyState = {
   submitted: boolean;
 };
 
-type CreatePartyProps = {} & WithRouterProps;
+type CreatePartyProps = {} & WithRouterProps & WithAuthProps;
 
 class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
   private formRef: React.RefObject<HTMLFormElement>;
   static contextType?: React.Context<PartySystemContextType> =
     PartySystemContext;
   private checkInterval?: NodeJS.Timeout;
-  constructor(props: WithRouterProps) {
+  constructor(props: CreatePartyProps) {
     super(props);
     this.state = {
       submitted: false,
@@ -223,4 +223,4 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
   }
 }
 
-export default withRouter(CreateParty);
+export default withRouter(withAuth(CreateParty));
