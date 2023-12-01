@@ -24,8 +24,10 @@ class Login extends React.Component<WithRouterProps, {}> {
         password: formData.get('password'),
       };
       try {
-        if (data.user_name === '' || data.password === '') {
-          throw Error('Please fill in all fields');
+        for (let fieldValue of Object.values(data)) {
+          if (fieldValue == '') {
+            throw Error('Please fill in all fields');
+          }
         }
         const status = await login(
           data.user_name as string,

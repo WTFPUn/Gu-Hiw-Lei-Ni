@@ -28,18 +28,18 @@ class Register extends React.Component<RegisterProps, {}> {
         password: formData.get('password'),
         confirm_password: formData.get('confirmPassword'),
       };
+
       try {
+        for (let fieldValue of Object.values(data)) {
+          if (fieldValue == '') {
+            throw Error('Please fill in all fields');
+          }
+        }
+        if ((data.password as string)?.length < 8) {
+          throw Error('Password must be at least 8 characters');
+        }
         if (data.password !== data.confirm_password) {
           throw Error('Password does not match');
-        }
-        if (
-          data.first_name === '' ||
-          data.last_name === '' ||
-          data.user_name === '' ||
-          data.password === '' ||
-          data.confirm_password === ''
-        ) {
-          throw Error('Please fill in all fields');
         }
         const res = await fetch(
           process.env.NEXT_PUBLIC_API_URL + '/auth/register',
