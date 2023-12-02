@@ -438,7 +438,9 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
         elif isinstance(request, SearchParty):
             # set lat variable and set to 5 decimal point
             in_radius_party = self.search_party_in_radius(request)
-            await client.callback.send_json({"cluster": in_radius_party.data})
+            await client.callback.send_json(
+                {"cluster": in_radius_party.model_dump_json()}
+            )
             return True
 
         elif isinstance(request, MatchMakingRequest):
