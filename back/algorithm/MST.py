@@ -160,6 +160,9 @@ class MSTClustering:
             self.clusters.append({self.nodes[0]})
             return [self.nodes]
 
+        if len(self.nodes) == 0:
+            return []
+
         self.__prim()
         self.__trim_clusters(K)
         self.__get_clusters()
