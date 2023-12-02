@@ -167,3 +167,8 @@ class WebSocketMultiplexer:
     async def clean_mux(cls):
         for handler in cls.handler.values():
             handler.pub_sub.clean()
+
+        for client in cls.clients.values():
+            await client.callback.close()
+
+        cls.clients = {}
