@@ -164,6 +164,6 @@ class WebSocketMultiplexer:
             return
 
     @classmethod
-    def clean_mux(cls):
+    async def clean_mux(cls):
         for handler in cls.handler.values():
             handler.pub_sub.clean()

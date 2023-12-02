@@ -12,5 +12,5 @@ async def clean_ws(request: Request) -> JSONResponse:
     if body["test_key"] != test_key:
         return JSONResponse({"status": False})
 
-    WebSocketMultiplexer.clean_mux()
+    await WebSocketMultiplexer.clean_mux()
     return JSONResponse({"status": True})
