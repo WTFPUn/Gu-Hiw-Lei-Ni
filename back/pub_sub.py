@@ -77,5 +77,6 @@ class PubSub:
             raise PubSubChannelError("Channel does not exist")
 
     def clean(self):
-        for channel in self.subscribers:
+        copy_subscribers = self.subscribers.copy()
+        for channel in copy_subscribers:
             self.unregister(channel)
