@@ -182,6 +182,9 @@ class WebSocketMultiplexer:
         clients = list(cls.clients.values())
         for client in clients:
             cls.clients.pop(client.token_data.user_id)
-            await client.ws.close()
+            try:
+                await client.ws.close()
+            except:
+                pass
 
         cls.clients = {}
