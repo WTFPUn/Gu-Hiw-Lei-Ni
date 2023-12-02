@@ -153,6 +153,9 @@ class WebSocketMultiplexer:
             if e.code == 1000:
                 # if client close connection, just pass
                 pass
+            else:
+                self.logger.error(e)
+            return
 
         except AssertionError as e:
             await websocket.send_json({"type": "error", "data": str(e)})
@@ -176,7 +179,9 @@ class WebSocketMultiplexer:
             handler.pub_sub.clean()
             handler.__init__()
 
-        for client in cls.clients.values():
+        clients = list(cls.clients.values())
+        for client in clients:
+            cls.clients.pop(client.token_data.user_id)
             await client.ws.close()
 
         cls.clients = {}
