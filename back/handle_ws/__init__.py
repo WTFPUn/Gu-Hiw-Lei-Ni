@@ -1,4 +1,3 @@
-from tkinter import W
 from pub_sub import Channel
 from handle_ws.ws_service import WebSocketService
 from handle_ws.client import Client
