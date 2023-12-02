@@ -76,7 +76,7 @@ class ChatHandler(WebSocketService[ChatHandleRequest]):
         validate mongo result, if it is None, send error message to client and return True
         """
         if mongo_result is None:
-            await client.callback.send_json({"type": "error", "error": error_message})
+            await client.callback({"type": "error", "error": error_message})
             return True
 
         return False
@@ -101,7 +101,7 @@ class ChatHandler(WebSocketService[ChatHandleRequest]):
             chat = Chat(session_id=session_id, dialogues=[])
             session = self.mongo_client["GuHiw"]["Chat"].insert_one(chat.model_dump())
             if session is None:
-                await client.callback.send_json(
+                await client.callback(
                     {"type": "error", "error": "Unsuccessfully create chat session"}
                 )
                 return False
@@ -122,7 +122,7 @@ class ChatHandler(WebSocketService[ChatHandleRequest]):
                 "Chat not found",
             )
             if val_party or val_session:
-                await client.callback.send_json(
+                await client.callback(
                     {"type": "error", "error": "Unsuccessfully join chat"}
                 )
                 return True
@@ -145,7 +145,7 @@ class ChatHandler(WebSocketService[ChatHandleRequest]):
             await self.pub_sub.publish(channel, ChatResponse(type="chat", data=chat))
 
             if chat_db is None:
-                await client.callback.send_json(
+                await client.callback(
                     {"type": "error", "error": "Unsuccessfully join chat"}
                 )
                 return True
@@ -181,7 +181,7 @@ class ChatHandler(WebSocketService[ChatHandleRequest]):
             )
 
             if chat_db is None:
-                await client.callback.send_json(
+                await client.callback(
                     {"type": "error", "error": "Unsuccessfully leave chat"}
                 )
                 return True
@@ -215,7 +215,7 @@ class ChatHandler(WebSocketService[ChatHandleRequest]):
                 {"session_id": session_id}, {"$push": {"dialogues": dump_dialogues}}
             )
             if chat_db is None:
-                await client.callback.send_json(
+                await client.callback(
                     {"type": "error", "error": "Unsuccessfully send message"}
                 )
                 return True

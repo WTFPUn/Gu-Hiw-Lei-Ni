@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import os
 import jwt
-from typing import Callable, List, Tuple, Set, ForwardRef
-from starlette.websockets import WebSocket
+from typing import Any, Callable, Coroutine, List, Tuple, Set, ForwardRef
+from starlette.websockets import WebSocket, WebSocketState
 from pydantic import BaseModel
 from typing import Dict, Union, Annotated, Literal, List
 from type.client_cookie import ClientCookie
@@ -27,14 +27,22 @@ class Client:
     """
 
     token: str
-    callback: WebSocket
+    callback: Callable[[dict], Coroutine[Any, Any, None]]
     subscribe_service: Set[serviceType]
 
     def __init__(self, token: str, callback: WebSocket) -> None:
         self.token = token
         self.subscribe_service = set()
-        self.callback = callback
+        self.ws = callback
+        self.callback = self.proxy_callback
         self.token_data: ClientCookie = self._decode_token()
+
+    async def proxy_callback(self, dict: dict) -> None:
+        """
+        Proxy callback to client.
+        """
+        if self.ws.state == WebSocketState.CONNECTED:
+            return await self.ws.send_json(dict)
 
     def _decode_token(self) -> ClientCookie:
         data = jwt.decode(self.token, os.getenv("JWT_SECRET"), algorithms=["HS256"])

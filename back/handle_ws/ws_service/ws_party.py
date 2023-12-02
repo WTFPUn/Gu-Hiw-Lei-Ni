@@ -162,7 +162,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
         if isinstance(request, CreatePartyRequest):
             channel: Channel = "current_party", client.token_data.user_id
             if channel in self.pub_sub.subscribers:
-                await client.callback.send_json(
+                await client.callback(
                     {"success": False, "message": "User already in party"}
                 )
                 return True
@@ -173,9 +173,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                 {"_id": False},
             )
             if party_host is None:
-                await client.callback.send_json(
-                    {"success": False, "message": "Host not found"}
-                )
+                await client.callback({"success": False, "message": "Host not found"})
                 return True
 
             party_host = User.model_validate(party_host)
@@ -222,7 +220,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                 service,
             )
 
-            await client.callback.send_json(
+            await client.callback(
                 {
                     "success": True,
                     "message": "Successfully created party",
@@ -235,18 +233,14 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             party: PartyResponse = self.pub_sub.channel_message[channel]  # type: ignore
             size = party.data.size  # type: ignore
             if size <= len(party.data.members):  # type: ignore
-                await client.callback.send_json(
-                    {"success": False, "message": "Party is full"}
-                )
+                await client.callback({"success": False, "message": "Party is full"})
                 return True
             self.pub_sub.subscribe(channel, client)
             user_id = client.token_data.user_id
 
             user = self.mongo_client["GuHiw"]["User"].find_one({"user_id": user_id})
             if user is None:
-                await client.callback.send_json(
-                    {"success": False, "message": "User not found"}
-                )
+                await client.callback({"success": False, "message": "User not found"})
                 return True
 
             user = User.model_validate(user)
@@ -269,7 +263,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             )
 
             if not access_status:
-                await client.callback.send_json(
+                await client.callback(
                     {"success": False, "message": "Party does not exist"}
                 )
 
@@ -284,7 +278,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                 )
                 self.pub_sub.subscribe(channel, client)
 
-                await client.callback.send_json(
+                await client.callback(
                     {"success": True, "message": "Successfully joined party"}
                 )
 
@@ -311,7 +305,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             channel = "party", request.party_id
             current_party: Party = self.pub_sub.get(channel).data  # type: ignore
 
-            await client.callback.send_json(
+            await client.callback(
                 {"success": True, "message": "Successfully start party"}
             )
 
@@ -320,14 +314,14 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             current_party: Party = self.pub_sub.get(channel).data  # type: ignore
 
             if current_party.status == "in_progress":  # type: ignore
-                await client.callback.send_json(
+                await client.callback(
                     {"success": False, "message": "Party is already started"}
                 )
                 return True
 
             user_id = client.token_data.user_id
             if user_id == current_party.host_id:  # type: ignore
-                await client.callback.send_json(
+                await client.callback(
                     {"success": False, "message": "Host cannot leave party"}
                 )
                 return True
@@ -340,7 +334,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             )
 
             if not chat_handle_result:
-                await client.callback.send_json(
+                await client.callback(
                     {"success": False, "message": "Chat does not exist"}
                 )
                 return True
@@ -352,12 +346,12 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             )
 
             if update_result is None:
-                await client.callback.send_json(
+                await client.callback(
                     {"success": False, "message": "Party does not exist"}
                 )
                 return True
 
-            await client.callback.send_json(
+            await client.callback(
                 {"success": True, "message": "Successfully leave party"}
             )
 
@@ -379,7 +373,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             )
 
             if not close_chat_status:
-                await client.callback.send_json(
+                await client.callback(
                     {
                         "success": False,
                         "message": "Chat does not exist or chat is already closed",
@@ -408,21 +402,21 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             )
 
             if not access_status:
-                await client.callback.send_json(
+                await client.callback(
                     {
                         "success": False,
                         "message": f"Party does not exist or party({request.party_id}) is already closed",
                     }
                 )
             else:
-                await client.callback.send_json(
+                await client.callback(
                     {"success": True, "message": "Successfully close party"}
                 )
 
         elif isinstance(request, GetCurrentParty):
             channel = "current_party", client.token_data.user_id
             if channel not in self.pub_sub.channel_message:
-                await client.callback.send_json(
+                await client.callback(
                     {"success": False, "message": "User is not currently in party"}
                 )
                 return True
@@ -432,13 +426,13 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             channel = "party", current_party_id
             response: PartyResponse = self.pub_sub.channel_message[channel]  # type: ignore
             dump = json.loads(response.model_dump_json())
-            await client.callback.send_json(dump)
+            await client.callback(dump)
             return True
 
         elif isinstance(request, SearchParty):
             # set lat variable and set to 5 decimal point
             in_radius_party = self.search_party_in_radius(request)
-            await client.callback.send_json({"cluster": in_radius_party.model_dump()})
+            await client.callback({"cluster": in_radius_party.model_dump()})
             return True
 
         elif isinstance(request, MatchMakingRequest):
@@ -465,7 +459,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                 parties = radius_filter.intersection(budget_filter)
 
                 if len(parties) == 0:
-                    await client.callback.send_json(
+                    await client.callback(
                         {"success": False, "message": "No party found"}
                     )
                     return True
@@ -480,7 +474,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                     service,
                 )
 
-                await client.callback.send_json(
+                await client.callback(
                     {
                         "success": True,
                         "message": "Successfully found party",

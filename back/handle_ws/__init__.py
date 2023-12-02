@@ -95,10 +95,12 @@ class WebSocketMultiplexer:
                     if tokendata.user_id in self.clients:
                         # check if client is in closed state, set websocket to new websocket
                         if (
-                            self.clients[tokendata.user_id].callback.client_state
+                            self.clients[tokendata.user_id].ws.client_state
                             == WebSocketState.DISCONNECTED
                         ):
-                            self.clients[tokendata.user_id].callback = websocket
+                            self.clients[
+                                tokendata.user_id
+                            ].callback = websocket.send_json
                             await websocket.send_json(
                                 {"type": "success", "data": "reconnected"}
                             )
@@ -175,6 +177,6 @@ class WebSocketMultiplexer:
             handler.__init__()
 
         for client in cls.clients.values():
-            await client.callback.close()
+            await client.ws.close()
 
         cls.clients = {}
