@@ -8,8 +8,8 @@ test_key = os.getenv("TEST_KEY")
 
 
 async def clean_ws(request: Request) -> JSONResponse:
-    await request.json()
-    if request["test_key"] != test_key:
+    body = await request.json()
+    if body["test_key"] != test_key:
         return JSONResponse({"status": False})
 
     WebSocketMultiplexer.clean_mux()
