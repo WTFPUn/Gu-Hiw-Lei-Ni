@@ -502,6 +502,9 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
         list_party = self.pub_sub.channel_message[("list_party",)].data.list_party  # type: ignore
 
         if isinstance(list_party, ListPartyPositionMessage):
+            if len(list_party.list_party) == 0:
+                return ClusterResponse(data=[])
+
             for party_id, party_info in list_party.list_party.items():
                 dist = self.__calculate_distance(
                     lat, lng, party_info.lat, party_info.lng
