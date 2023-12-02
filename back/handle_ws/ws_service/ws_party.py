@@ -499,7 +499,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
 
         parties_in_radius: List[Party] = []
 
-        list_party = self.pub_sub.channel_message[("list_party",)].data.list_party  # type: ignore
+        list_party = self.pub_sub.channel_message[("list_party",)].data  # type: ignore
 
         if isinstance(list_party, ListPartyPositionMessage):
             for party_id, party_info in list_party.list_party.items():
