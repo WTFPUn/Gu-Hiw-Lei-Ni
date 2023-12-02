@@ -6,7 +6,7 @@ from pub_sub import Channel
 from handle_ws.client import Client
 from handle_ws.ws_service import WebSocketService
 from pydantic import BaseModel, Field
-from typing import Literal, TypedDict, Union, Annotated, Dict, List
+from typing import Literal, Optional, Set, TypedDict, Union, Annotated, Dict, List
 import json
 
 from type.User import User
@@ -49,6 +49,14 @@ class ClosePartyRequest(BaseModel):
     party_id: str
 
 
+class MatchMakingRequest(BaseModel):
+    type: Literal["match_making"] = "match_making"
+    radius: int
+    budget: int
+    lat: float
+    lng: float
+
+
 class GetCurrentParty(BaseModel):
     type: Literal["get_current_party"] = "get_current_party"
 
@@ -69,6 +77,7 @@ PartyHandlerRequest = Annotated[
         GetCurrentParty,
         SearchParty,
         LeavePartyRequest,
+        MatchMakingRequest,
     ],
     Field(discriminator="type"),
 ]
@@ -224,8 +233,8 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
         elif isinstance(request, JoinPartyRequest):
             channel = "party", request.party_id
             party: PartyResponse = self.pub_sub.channel_message[channel]  # type: ignore
-            size = party.data.size
-            if size <= len(party.data.members):
+            size = party.data.size  # type: ignore
+            if size <= len(party.data.members):  # type: ignore
                 await client.callback.send_json(
                     {"success": False, "message": "Party is full"}
                 )
@@ -243,10 +252,10 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             user = User.model_validate(user)
             user.__dict__.pop("password")
 
-            copy_party = party.data.model_copy()
+            copy_party = party.data.model_copy()  # type: ignore
             dumpb_copy_party = copy_party.model_dump(exclude={"members", "host_id"})
 
-            party.data.members[user_id] = user
+            party.data.members[user_id] = user  # type: ignore
 
             await service["chathandler"].handle_ws(
                 JoinChatRequest(type="join_chat", session_id=request.party_id),
@@ -430,6 +439,54 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             # set lat variable and set to 5 decimal point
             in_radius_party = self.search_party_in_radius(request)
             await client.callback.send_json({"cluster": in_radius_party.data})
+            return True
+
+        elif isinstance(request, MatchMakingRequest):
+            radius = request.radius
+            budget = request.budget
+            lat = request.lat
+            lng = request.lng
+
+            parties_list = self.pub_sub.channel_message[("list_party",)].data.list_party  # type: ignore
+
+            if isinstance(parties_list, ListPartyPositionMessage):
+                parties_list = parties_list.list_party
+
+                radius_filter: Set[ReferenceParty] = set()
+                budget_filter: Set[ReferenceParty] = set()
+
+                for party_id, party_info in parties_list.items():
+                    party: ReferenceParty = self.pub_sub.get(("party", party_id)).data  # type: ignore
+                    if party.get_distance_from_point(lat, lng) < radius:
+                        radius_filter.add(party)
+                    if party.budget == budget:
+                        budget_filter.add(party)
+
+                parties = radius_filter.intersection(budget_filter)
+
+                if len(parties) == 0:
+                    await client.callback.send_json(
+                        {"success": False, "message": "No party found"}
+                    )
+                    return True
+
+                party = list(parties)[0]
+
+                # join party
+                channel = "party", party.id
+                await self.handle_ws(
+                    JoinPartyRequest(type="join_party", party_id=party.id),
+                    client,
+                    service,
+                )
+
+                await client.callback.send_json(
+                    {
+                        "success": True,
+                        "message": "Successfully found party",
+                        "party": party.model_dump(),
+                    }
+                )
 
         else:
             return False
