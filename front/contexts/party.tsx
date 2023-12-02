@@ -29,6 +29,14 @@ export type PartyInfo = {
   budget?: 'low' | 'medium' | 'high';
 };
 
+export type PartyMarker = {
+  lat: number;
+  lng: number;
+  party_id: string;
+};
+
+export type ClusterMarker = {};
+
 export type Message = {
   type: string;
   message_id: string;
@@ -87,7 +95,18 @@ export type PartySystemContextType = {
    * Null if the user is not querying a party.
    */
   queryPartyInfo?: PartyInfo | null;
-  nearbyParties?: PartyInfo[];
+  /**
+   * The search range to search for nearby parties.
+   */
+  nearbyRadius?: number;
+  /**
+   * The nearby parties.
+   */
+  nearbyParties?: PartyMarker[];
+  /**
+   * The websocket ready state.
+   */
+  setNearbyRadius?: (radius: number) => void;
   /**
    * The last json message received from the websocket.
    */
@@ -191,9 +210,9 @@ export default function PartySystemProvider({
     shouldReconnect: closeEvent => true,
   });
 
-  const [systemState, setSystemState] = React.useState<PartySystemContextType>(
-    {},
-  );
+  const [systemState, setSystemState] = React.useState<PartySystemContextType>({
+    nearbyRadius: 4,
+  });
 
   const send: MessageSender = (
     type: string,
@@ -460,7 +479,7 @@ export default function PartySystemProvider({
   };
 
   const update_current_location = () => {
-    if (navigator.geolocation) {
+    if (navigator?.geolocation) {
       navigator.geolocation.getCurrentPosition(
         position => {
           // console.log(position.coords);
@@ -491,7 +510,7 @@ export default function PartySystemProvider({
     update_current_location();
     updateInterval = setInterval(() => {
       update_current_location();
-    }, 10000);
+    }, 1500);
 
     window.addEventListener('tokenChange', handle_socket_open);
     return () => {

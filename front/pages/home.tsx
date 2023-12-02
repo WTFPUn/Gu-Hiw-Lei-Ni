@@ -3,7 +3,7 @@ import Layout from '@/components/common/Layout';
 
 import GoogleMapReact, { Coords, meters2ScreenPixels } from 'google-map-react';
 import { Transition } from '@headlessui/react';
-import { HiwMarker, Marker } from '@/components/maps/marker';
+import { ClusterMarker, HiwMarker, Marker } from '@/components/maps/marker';
 import { classNames } from '@/utils/style';
 import DropdownForm from '@/components/form/DropdownForm';
 import Button from '@/components/common/Button';
@@ -225,6 +225,8 @@ class Home extends React.Component<HomeProps, HomeState> {
       zoom || 0,
     );
 
+    console.log(zoom);
+
     const DrawerPartyDiv = React.forwardRef<
       HTMLDivElement,
       DrawerContainerProps
@@ -282,22 +284,7 @@ class Home extends React.Component<HomeProps, HomeState> {
                   />
                 </Marker>
               )}
-              {testLocations.map((location, index) => {
-                return (
-                  <HiwMarker
-                    key={index + 'hiw'}
-                    lat={location.lat}
-                    lng={location.lng}
-                    onClick={this.handle_click_marker}
-                    partyId={''}
-                    data-test={'hiw-' + index}
-                    active={
-                      selectedMarker?.lat === location.lat &&
-                      selectedMarker?.lng === location.lng
-                    }
-                  />
-                );
-              })}
+
               {currentLocation && (
                 <Marker
                   data-test="current-location-marker"
@@ -307,6 +294,38 @@ class Home extends React.Component<HomeProps, HomeState> {
                   <div className="w-5 h-5 bg-blue-500 rounded-full shadow-2xl border-2 border-white translate-x-[-25%] translate-y-[-25%]" />
                 </Marker>
               )}
+              {[
+                { cluster_coords: currentLocation, parties: testLocations },
+              ].map((cluster, clusterIndex) => {
+                if (
+                  this.state?.zoom != null &&
+                  this.state.zoom <= 14 &&
+                  cluster.parties.length > 1
+                )
+                  return (
+                    <ClusterMarker
+                      lat={testLocations[0].lat}
+                      lng={testLocations[0].lng}
+                      partiesSize={cluster.parties.length}
+                    />
+                  );
+                return cluster.parties.map((location, index) => {
+                  return (
+                    <HiwMarker
+                      key={index + 'hiwcluster' + clusterIndex}
+                      lat={location.lat}
+                      lng={location.lng}
+                      onClick={this.handle_click_marker}
+                      partyId={''}
+                      data-test={'hiw-' + index}
+                      active={
+                        selectedMarker?.lat === location.lat &&
+                        selectedMarker?.lng === location.lng
+                      }
+                    />
+                  );
+                });
+              })}
 
               <Marker lat={center?.lat ?? 0} lng={center?.lng ?? 0}>
                 {/* current center on map */}
@@ -482,13 +501,13 @@ class Home extends React.Component<HomeProps, HomeState> {
                     {this.check_valid_create_location() && placeInfo ? (
                       <Button
                         text="Create Party"
-                        data-test="create-party-btn"
+                        data-test="create-party-location-btn"
                         primary
                         onClick={() => {
                           router.push(
                             `/createparty?lat=${center?.lat}&lng=${
                               center?.lng
-                            }&place_data-test=${
+                            }&place_id=${
                               placeInfo.place_id
                             }&address=${encodeURIComponent(
                               placeInfo.formatted_address,
@@ -500,7 +519,7 @@ class Home extends React.Component<HomeProps, HomeState> {
                       <Button
                         text={'Please select location within 4km'}
                         danger
-                        data-test="disabled-create-party-btn"
+                        data-test="disabled-create-party-location-btn"
                         onClick={() => {}}
                       />
                     )}

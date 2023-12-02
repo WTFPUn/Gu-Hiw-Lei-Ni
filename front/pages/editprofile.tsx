@@ -1,51 +1,75 @@
-import AuthLayout from '@/components/common/AuthLayout';
 import Button from '@/components/common/Button';
-import TextForm from '@/components/form/TextForm';
-import React from 'react';
-import Link from 'next/link';
+import Layout from '@/components/common/Layout';
+import DropdownForm from '@/components/form/DropdownForm';
 import ImageUploadForm from '@/components/form/ImageUploadForm';
+import TextForm from '@/components/form/TextForm';
+import InfoTable from '@/components/party/InfoTable';
+import {
+  PartyInfo,
+  PartySystemContext,
+  PartySystemContextType,
+} from '@/contexts/party';
+import { WithAuthProps, get_auth, withAuth } from '@/utils/auth';
+import { calculateDistance } from '@/utils/map';
+import { Coords } from 'google-map-react';
+import { WithRouterProps } from 'next/dist/client/with-router';
 import { withRouter } from 'next/router';
-import { WithRouterProps } from '@/utils/router';
+import React from 'react';
 
-type RegisterProps = {} & WithRouterProps;
+type EditProfileState = {
+  submitted: boolean;
+};
 
-class Register extends React.Component<RegisterProps, {}> {
+type EditProfileProps = {} & WithRouterProps & WithAuthProps;
+
+class EditProfile extends React.Component<EditProfileProps, EditProfileState> {
   private formRef: React.RefObject<HTMLFormElement>;
-  constructor(props: RegisterProps) {
+  constructor(props: EditProfileProps) {
     super(props);
+    this.state = {
+      submitted: false,
+    };
     this.formRef = React.createRef();
   }
 
   async submit_form(e: React.SyntheticEvent) {
     e.preventDefault();
     const form = this.formRef.current;
+    const { user } = get_auth();
+
     if (form) {
       const formData = new FormData(form);
       const data = {
         first_name: formData.get('firstName'),
         last_name: formData.get('lastName'),
-        user_name: formData.get('username'),
-        password: formData.get('password'),
         confirm_password: formData.get('confirmPassword'),
       };
-
       try {
         for (let fieldValue of Object.values(data)) {
           if (fieldValue == '') {
             throw Error('Please fill in all fields');
           }
         }
-        if ((data.password as string)?.length < 8) {
-          throw Error('Password must be at least 8 characters');
+
+        if (
+          data.first_name == user?.first_name &&
+          data.last_name == user?.last_name
+        ) {
+          throw Error('Please change make changes to your profile');
+        } else if (data.first_name == user?.first_name) {
+          data.first_name = null;
+        } else if (data.last_name == user?.last_name) {
+          data.last_name = null;
         }
-        if (data.password !== data.confirm_password) {
-          throw Error('Password does not match');
-        }
+
         const res = await fetch(
-          process.env.NEXT_PUBLIC_API_URL + '/auth/register',
+          process.env.NEXT_PUBLIC_API_URL + '/profile/editprofile',
           {
             method: 'POST',
-            body: JSON.stringify(data),
+            body: JSON.stringify({
+              data,
+              token: localStorage.getItem('token') ?? '',
+            }),
             headers: {
               'Content-Type': 'application/json',
             },
@@ -53,10 +77,13 @@ class Register extends React.Component<RegisterProps, {}> {
         );
         if (!res.ok) {
           const text = await res.text();
-          throw Error('Cannot create new user: ' + text);
+          throw Error('Cannot create edit profile: ' + text);
+        } else {
+          alert('Profile edited successfully, please login again');
+          localStorage.removeItem('token');
+          this.props.router.push('/login');
         }
         console.log(res);
-        this.props.router.push('/login');
       } catch (e: any) {
         alert(e.message);
       }
@@ -66,13 +93,20 @@ class Register extends React.Component<RegisterProps, {}> {
   }
 
   render() {
+    const { router } = this.props;
+
+    if (router.isReady) {
+      if (!get_auth().auth_status) router.push('/login');
+    }
+
     return (
-      <AuthLayout>
-        <h1 className="text-3xl font-semibold pl-8">Register</h1>
+      <Layout type="party">
+        <h1 className="text-3xl font-semibold pl-8 pt-24">Profile</h1>
+        <h2 className="text-2xl font-light text-light-gray pl-8 pt-2"></h2>
         <form
           ref={this.formRef}
-          className="flex flex-col justify-center align-middle items-center content-center"
           onSubmit={e => this.submit_form(e)}
+          className="flex flex-col justify-center align-middle items-center content-center"
         >
           <div className="h-full pt-16 flex flex-col gap-4 w-3/4">
             <div className="flex justify-center">
@@ -84,6 +118,7 @@ class Register extends React.Component<RegisterProps, {}> {
               required
               name="firstName"
               data-test="first-name"
+              defaultValue={get_auth()?.user?.first_name ?? ''}
             />
             <TextForm
               text="Last name"
@@ -91,6 +126,7 @@ class Register extends React.Component<RegisterProps, {}> {
               required
               name="lastName"
               data-test="last-name"
+              defaultValue={get_auth()?.user?.last_name ?? ''}
             />
             <TextForm
               text="Username"
@@ -98,14 +134,8 @@ class Register extends React.Component<RegisterProps, {}> {
               required
               name="username"
               data-test="username"
-            />
-            <TextForm
-              text="Password"
-              placeholder="Enter Password"
-              required
-              password
-              name="password"
-              data-test="password"
+              disabled={true}
+              value={get_auth()?.user?.user_name ?? ''}
             />
             <TextForm
               text="Confirm Password"
@@ -118,29 +148,17 @@ class Register extends React.Component<RegisterProps, {}> {
           </div>
 
           <div className="py-24 flex flex-col w-3/4 justify-center content-center gap-2">
-            <div className="text-center font-normal">
-              {'Already have an account?   '}
-              <Link
-                href="/login"
-                data-test="login-page-btn"
-                className="font-semibold"
-              >
-                Login
-              </Link>
-            </div>
             <Button
-              text="Sign up"
+              text="Edit"
               primary
-              onClick={e => {
-                this.submit_form(e);
-              }}
-              data-test="register-btn"
+              onClick={e => this.submit_form(e)}
+              data-test="edit-profile-btn"
             />
           </div>
         </form>
-      </AuthLayout>
+      </Layout>
     );
   }
 }
 
-export default withRouter(Register);
+export default withRouter(withAuth(EditProfile));

@@ -2,7 +2,7 @@ import Button from '@/components/common/Button';
 import Layout from '@/components/common/Layout';
 import InfoTable from '@/components/party/InfoTable';
 import { PartySystemContext, PartySystemContextType } from '@/contexts/party';
-import { get_auth } from '@/utils/auth';
+import { WithAuthProps, get_auth, withAuth } from '@/utils/auth';
 import {
   calculateDistance,
   get_place_image,
@@ -13,7 +13,7 @@ import { WithRouterProps } from 'next/dist/client/with-router';
 import { withRouter } from 'next/router';
 import React from 'react';
 
-type PartyDetailProps = {} & WithRouterProps;
+type PartyDetailProps = {} & WithRouterProps & WithAuthProps;
 
 type PartyDetailState = {
   isCurrentlyAction: boolean;
@@ -22,7 +22,7 @@ type PartyDetailState = {
 class PartyDetail extends React.Component<PartyDetailProps, PartyDetailState> {
   static contextType?: React.Context<PartySystemContextType> =
     PartySystemContext;
-  constructor(props: WithRouterProps) {
+  constructor(props: PartyDetailProps) {
     super(props);
     this.state = {
       isCurrentlyAction: false,
@@ -63,8 +63,9 @@ class PartyDetail extends React.Component<PartyDetailProps, PartyDetailState> {
     const { currentPartyInfo, start_party, close_party } = partySystem;
 
     const isHost = currentPartyInfo?.host?.user_id == get_auth()?.user?.user_id;
-    if (router.isReady && !partySystem?.currentPartyInfo) {
-      router.push('/home');
+    if (router.isReady) {
+      if (!partySystem?.currentPartyInfo) router.push('/home');
+      else if (!get_auth().auth_status) router.push('/login');
     }
 
     return (
@@ -151,4 +152,4 @@ class PartyDetail extends React.Component<PartyDetailProps, PartyDetailState> {
   }
 }
 
-export default withRouter(PartyDetail);
+export default withRouter(withAuth(PartyDetail));

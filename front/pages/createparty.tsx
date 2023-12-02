@@ -8,7 +8,7 @@ import {
   PartySystemContext,
   PartySystemContextType,
 } from '@/contexts/party';
-import { get_auth } from '@/utils/auth';
+import { WithAuthProps, get_auth, withAuth } from '@/utils/auth';
 import { calculateDistance } from '@/utils/map';
 import { Coords } from 'google-map-react';
 import { WithRouterProps } from 'next/dist/client/with-router';
@@ -19,14 +19,14 @@ type CreatePartyState = {
   submitted: boolean;
 };
 
-type CreatePartyProps = {} & WithRouterProps;
+type CreatePartyProps = {} & WithRouterProps & WithAuthProps;
 
 class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
   private formRef: React.RefObject<HTMLFormElement>;
   static contextType?: React.Context<PartySystemContextType> =
     PartySystemContext;
   private checkInterval?: NodeJS.Timeout;
-  constructor(props: WithRouterProps) {
+  constructor(props: CreatePartyProps) {
     super(props);
     this.state = {
       submitted: false,
@@ -56,14 +56,10 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
         lng: +(this.props.router.query.lng as string),
       };
       try {
-        if (
-          partyData.party_name == '' ||
-          partyData.description == '' ||
-          partyData.location == '' ||
-          partyData.budget == '' ||
-          partyData.size == ''
-        ) {
-          throw Error('Please fill in all fields');
+        for (let fieldValue of Object.values(partyData)) {
+          if (fieldValue == '') {
+            throw Error('Please fill in all fields');
+          }
         }
         if (
           partyData?.size &&
@@ -139,7 +135,7 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
 
     if (router.isReady) {
       if (!lat || !lng || !place_id || !address) router.push('/home');
-      if (partySystem.currentPartyInfo) {
+      else if (partySystem.currentPartyInfo) {
         router.push('/currentparty');
       }
     }
@@ -223,4 +219,4 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
   }
 }
 
-export default withRouter(CreateParty);
+export default withRouter(withAuth(CreateParty));

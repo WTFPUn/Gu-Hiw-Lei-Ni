@@ -1,4 +1,6 @@
+import { PartyInfo } from '@/contexts/party';
 import { classNames } from '@/utils/style';
+import { Coords } from 'google-map-react';
 import React from 'react';
 
 type MarkerProps = {
@@ -18,6 +20,18 @@ type HiwMarkerProps = {
   onClick?: (lat: number, lng: number, partyId: string) => void;
   active?: boolean;
   partyId: string;
+  classname?: string;
+  children?: React.ReactNode;
+  'data-test'?: string;
+  hide?: boolean;
+};
+
+type ClusterMarkerProps = {
+  lat: number;
+  lng: number;
+  onClick?: (lat: number, lng: number) => void;
+  clusterMarker?: boolean;
+  partiesSize?: number;
   classname?: string;
   children?: React.ReactNode;
   'data-test'?: string;
@@ -91,6 +105,28 @@ export class HiwMarker extends React.Component<HiwMarkerProps> {
           <img src="/marker.png" width={32} height={32} />
         )}
         {this.props.children}
+      </Marker>
+    );
+  }
+}
+
+export class ClusterMarker extends React.Component<ClusterMarkerProps> {
+  render() {
+    return (
+      <Marker
+        lat={this.props.lat}
+        lng={this.props.lng}
+        onClick={(lat, lng) => this.props.onClick?.(lat, lng)}
+        classname={this.props.classname}
+        hide={this.props.hide}
+        data-test={this.props['data-test']}
+      >
+        <div className="">
+          <img src="/cluster.svg" className="" width={32} height={32} />
+          <div className="text-white text-center w-5 font-bold absolute top-1/4 left-0 translate-x-1/4 ">
+            {this.props?.partiesSize ?? ''}
+          </div>
+        </div>
       </Marker>
     );
   }
