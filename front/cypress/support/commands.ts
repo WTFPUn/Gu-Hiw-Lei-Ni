@@ -37,38 +37,68 @@
 // }
 
 Cypress.Commands.add('login', (username: string, password: string) => {
-  cy.session(
-    username,
-    () => {
-      cy.visit('/login');
-      cy.get('input[name=username]').type(username);
-      cy.get('input[name=password]').type(`${password}{enter}`, { log: false });
-      cy.url().should('include', '/home');
-    },
-    {
-      validate: () => {
-        expect(localStorage.getItem('token')).to.be.a('string');
-      },
-    },
-  );
+  cy.visit('/login');
+  cy.get('input[name=username]').type(username);
+  cy.get('input[name=password]').type(`${password}{enter}`, { log: false });
+  cy.url().should('include', '/home');
 });
 
 Cypress.Commands.add(
   'register',
-  (username: string, firstName: string, lastName: string, password: string) => {
-    cy.visit('/register');
-    cy.get('input[name=username]').type(username);
-    cy.get('input[name=firstName]').type(firstName);
-    cy.get('input[name=lastName]').type(lastName);
-    cy.get('input[name=password]').type(password);
-    cy.get('input[name=confirmPassword]').type(password);
-    cy.get('button[type=submit]').click();
-    cy.on('window:alert', str => {
-      expect(str, 'if user already exists').to.equal(
-        'Cannot create new user: Username already exists',
-      );
-      cy.visit('/login');
+  (user: {
+    username: string;
+    firstName: string;
+    lastName: string;
+    password: string;
+  }) => {
+    cy.request('POST', Cypress.env('API_URL') + '/auth/register', {
+      user_name: user.username,
+      first_name: user.firstName,
+      last_name: user.lastName,
+      password: user.password,
+      confirm_password: user.password,
+    }).then(res => {
+      expect(res.status).to.equal(200);
     });
-    cy.url().should('include', '/login');
   },
 );
+
+Cypress.Commands.add('logout', () => {
+  if (localStorage.getItem('token') !== null) {
+    localStorage.removeItem('token');
+  }
+  cy.url().then(url => {
+    if (!url.includes('/login')) {
+      cy.visit('/login');
+    }
+  });
+});
+
+Cypress.Commands.add('mockGeolocation', (coords: number[]) => {
+  cy.window().then(win => {
+    cy.wrap(
+      Cypress.automation('remote:debugger:protocol', {
+        command: 'Browser.grantPermissions',
+        params: {
+          permissions: ['geolocation'],
+          origin: win.location.origin,
+        },
+      }),
+    );
+  });
+
+  console.debug(
+    `cypress::setGeolocationOverride with position ${JSON.stringify(coords)}`,
+  );
+
+  cy.log('**setGeolocationOverride**').then(() =>
+    Cypress.automation('remote:debugger:protocol', {
+      command: 'Emulation.setGeolocationOverride',
+      params: {
+        latitude: coords[0],
+        longitude: coords[1],
+        accuracy: 50,
+      },
+    }),
+  );
+});
