@@ -1,16 +1,18 @@
 from __future__ import annotations
 from uuid import uuid4
 from math import sqrt, pi, cos, asin
+from algorithm.MST import ClusterResponse, MSTClustering
 from pub_sub import Channel
 from handle_ws.client import Client
 from handle_ws.ws_service import WebSocketService
 from pydantic import BaseModel, Field
-from typing import Literal, Union, Annotated, Dict, List
+from typing import Literal, TypedDict, Union, Annotated, Dict, List
 import json
 
 from type.User import User
 from type.party import Party, ReferenceParty
 from type.ws.response_ws import ResponseWs
+import os
 
 
 from .ws_chat import (
@@ -105,6 +107,8 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
     """
     Match making service.
     """
+
+    STACKED_RADIUS_RATIO = int(os.getenv("STACKED_RADIUS_RATIO", 5))
 
     onSearchParty = {}
 
@@ -425,18 +429,18 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
         elif isinstance(request, SearchParty):
             # set lat variable and set to 5 decimal point
             in_radius_party = self.search_party_in_radius(request)
-            await client.callback.send_json({"parties": in_radius_party})
+            await client.callback.send_json({"cluster": in_radius_party.data})
 
         else:
             return False
         # request =  self.RequestType.
         return True
 
-    def search_party_in_radius(self, request: SearchParty) -> List[str]:
+    def search_party_in_radius(self, request: SearchParty) -> ClusterResponse:
         lat = round(request.lat, 5)
         lng = round(request.lng, 5)
 
-        items: List[str] = []
+        parties_in_radius: List[Party] = []
 
         list_party = self.pub_sub.channel_message[("list_party",)].data.list_party  # type: ignore
 
@@ -447,6 +451,12 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                 )
                 if dist < request.radius:
                     party: Party = self.pub_sub.get(("party", party_id))  # type: ignore
-                    items.append(party.model_dump_json())
+                    parties_in_radius.append(party.data)  # type: ignore
 
-        return items
+        mst = MSTClustering(parties_in_radius)
+
+        mst.fit(K=request.radius / self.STACKED_RADIUS_RATIO)
+
+        clus_res = mst.get_cluster_response()
+
+        return clus_res

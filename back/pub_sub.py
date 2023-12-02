@@ -75,3 +75,7 @@ class PubSub:
             return self.channel_message[channel]
         else:
             raise PubSubChannelError("Channel does not exist")
+
+    def clean(self):
+        for channel in self.subscribers:
+            self.unregister(channel)

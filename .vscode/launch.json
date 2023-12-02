@@ -5,7 +5,7 @@
       "request": "launch",
       "name": "Front Next.js ",
       "url": "http://localhost:3000",
-      "webRoot": "${workspaceFolder}/front/src",
+      "webRoot": "${workspaceFolder}/front/src"
     },
     {
       "type": "python",
@@ -13,7 +13,15 @@
       "name": "Back FastAPI",
       "program": "${workspaceFolder}/back/main.py",
       "console": "integratedTerminal",
-      "justMyCode": true,
+      "justMyCode": true
+    },
+    {
+      "name": "playground",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/back/playground.py",
+      "console": "integratedTerminal",
+      "justMyCode": true
     }
   ]
 }

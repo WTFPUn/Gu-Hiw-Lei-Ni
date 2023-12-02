@@ -11,6 +11,7 @@ from logging import Logger
 from handle_req.maps import Maps
 from handle_req.auth import Auth
 from handle_req.profile import Profile
+from handle_req.clean_ws import clean_ws
 from handle_ws import WebSocketMultiplexer
 from pymongo import MongoClient
 
@@ -53,6 +54,7 @@ async def main() -> None:
     app.routes.extend(auth.route())
     app.routes.extend(map.route())
     app.routes.extend(profile.route())
+    app.add_route("/clean_ws", clean_ws, methods=["POST"])
 
     # init mux
     mux = WebSocketMultiplexer(mongo_client)
