@@ -1,3 +1,4 @@
+from tkinter import W
 from pub_sub import Channel
 from handle_ws.ws_service import WebSocketService
 from handle_ws.client import Client
@@ -9,7 +10,7 @@ import logging
 import json
 from starlette.websockets import WebSocketState
 
-from starlette.websockets import WebSocket
+from starlette.websockets import WebSocket, WebSocketDisconnect
 from starlette.endpoints import WebSocketEndpoint
 from type.ws.error import PubSubChannelError
 
@@ -147,6 +148,11 @@ class WebSocketMultiplexer:
                     await websocket.close()
                     self.logger.error("Invalid request type")
                     return
+        except WebSocketDisconnect as e:
+            if e.code == 1000:
+                # if client close connection, just pass
+                pass
+
         except AssertionError as e:
             await websocket.send_json({"type": "error", "data": str(e)})
             await websocket.close()
@@ -167,6 +173,7 @@ class WebSocketMultiplexer:
     async def clean_mux(cls):
         for handler in cls.handler.values():
             handler.pub_sub.clean()
+            handler.__init__()
 
         for client in cls.clients.values():
             await client.callback.close()
