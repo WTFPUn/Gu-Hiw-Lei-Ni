@@ -41,7 +41,7 @@ class Client:
         """
         Proxy callback to client.
         """
-        if self.ws.state == WebSocketState.CONNECTED:
+        if self.ws.client_state == WebSocketState.CONNECTED:
             return await self.ws.send_json(dict)
 
     def _decode_token(self) -> ClientCookie:
