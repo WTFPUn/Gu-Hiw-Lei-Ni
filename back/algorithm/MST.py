@@ -156,6 +156,10 @@ class MSTClustering:
         return (max_lat + min_lat) / 2, (max_lng + min_lng) / 2
 
     def fit(self, K: float = 2):
+        if len(self.nodes) == 1:
+            self.clusters.append({self.nodes[0]})
+            return [self.nodes]
+
         self.__prim()
         self.__trim_clusters(K)
         self.__get_clusters()
