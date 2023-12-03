@@ -50,7 +50,7 @@ class PubSub:
         if channel in self.subscribers:
             self.channel_message[channel] = message
             for subscriber in self.subscribers[channel]:
-                await subscriber.callback.send_json(
+                await subscriber.callback(
                     json.loads(self.channel_message[channel].model_dump_json())
                 )
         else:
