@@ -91,7 +91,9 @@ class Matchmaking extends React.Component<MatchmakingProps, MatchmakingState> {
 
     if (router.isReady) {
       if (currentPartyInfo) {
-        router.push('/currentparty');
+        setTimeout(() => {
+          router.push('/currentparty');
+        }, 1500);
       }
     }
 
