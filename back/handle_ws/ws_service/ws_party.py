@@ -442,20 +442,20 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             lat = request.lat
             lng = request.lng
 
-            parties_list = self.pub_sub.channel_message[("list_party",)].data.list_party  # type: ignore
+            parties_list = self.pub_sub.channel_message[("list_party",)].data  # type: ignore
 
             if isinstance(parties_list, ListPartyPositionMessage):
                 parties_list = parties_list.list_party
 
-                radius_filter: Set[ReferenceParty] = set()
-                budget_filter: Set[ReferenceParty] = set()
+                radius_filter: Set[str] = set()
+                budget_filter: Set[str] = set()
 
                 for party_id, party_info in parties_list.items():
                     party: ReferenceParty = self.pub_sub.get(("party", party_id)).data  # type: ignore
                     if party.get_distance_from_point(lat, lng) < radius:
-                        radius_filter.add(party)
+                        radius_filter.add(party.id)
                     if party.budget == budget:
-                        budget_filter.add(party)
+                        budget_filter.add(party.id)
 
                 parties = radius_filter.intersection(budget_filter)
 
