@@ -465,7 +465,16 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                     )
                     return True
 
-                party = list(parties)[0]
+                party = self.pub_sub.get(("party", parties.pop())).data  # type: ignore
+
+                # send a signal to the user that the party is found
+                await client.callback(
+                    {
+                        "success": True,
+                        "message": "Successfully found party",
+                        "party": party.model_dump(),
+                    }
+                )
 
                 # join party
                 channel = "party", party.id
@@ -473,14 +482,6 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                     JoinPartyRequest(type="join_party", party_id=party.id),
                     client,
                     service,
-                )
-
-                await client.callback(
-                    {
-                        "success": True,
-                        "message": "Successfully found party",
-                        "party": party.model_dump(),
-                    }
                 )
 
         else:
