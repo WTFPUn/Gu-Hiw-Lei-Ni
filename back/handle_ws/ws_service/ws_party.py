@@ -52,7 +52,7 @@ class ClosePartyRequest(BaseModel):
 class MatchMakingRequest(BaseModel):
     type: Literal["match_making"] = "match_making"
     radius: int
-    budget: str
+    budget: Literal["low", "medium", "high"]
     lat: float
     lng: float
 
