@@ -452,6 +452,11 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
 
                 for party_id, party_info in parties_list.items():
                     party: ReferenceParty = self.pub_sub.get(("party", party_id)).data  # type: ignore
+                    if (
+                        len(party.members) >= party.size
+                        or party.status != "not_started"
+                    ):
+                        continue
                     if party.get_distance_from_point(lat, lng) < radius:
                         radius_filter.add(party.id)
                     if party.budget == budget:
