@@ -52,7 +52,7 @@ class ClosePartyRequest(BaseModel):
 class MatchMakingRequest(BaseModel):
     type: Literal["match_making"] = "match_making"
     radius: int
-    budget: Literal["low", "medium", "high"]
+    budget: Optional[Literal["low", "medium", "high"]] = None
     lat: float
     lng: float
 
@@ -458,6 +458,8 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                         budget_filter.add(party.id)
 
                 parties = radius_filter.intersection(budget_filter)
+                if len(parties) == 0:
+                    parties = radius_filter.union(budget_filter)
 
                 if len(parties) == 0:
                     await client.callback(
