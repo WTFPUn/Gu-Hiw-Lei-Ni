@@ -259,7 +259,8 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
 
             await self.pub_sub.publish(channel, party)
             access_status = self.mongo_client["GuHiw"]["Party"].find_one_and_update(
-                {"id": request.party_id}, {"$push": {"members": user_id}}
+                {"id": request.party_id},
+                {"$push": {"members": user.model_dump(exclude={"password"})}},
             )
 
             if not access_status:
