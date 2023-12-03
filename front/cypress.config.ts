@@ -7,7 +7,9 @@ import * as fs from 'fs';
 export default defineConfig({
   env: {
     API_URL: process.env.NEXT_PUBLIC_API_URL,
+    TEST_KEY: process.env.TEST_KEY ?? 'test',
   },
+  video: true,
   e2e: {
     baseUrl: 'http://localhost:3000',
     viewportHeight: 896,

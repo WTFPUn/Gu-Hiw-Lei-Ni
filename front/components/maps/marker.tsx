@@ -100,7 +100,7 @@ export class HiwMarker extends React.Component<HiwMarkerProps> {
         data-test={this.props['data-test']}
       >
         {this.props.active ? (
-          <img src="/meat.png" width={32} height={32} />
+          <img src="/marker.png" width={32} height={32} />
         ) : (
           <img src="/marker.png" width={32} height={32} />
         )}

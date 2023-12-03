@@ -137,7 +137,7 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
       if (!lat || !lng || !place_id || !address) router.push('/home');
       else if (partySystem.currentPartyInfo) {
         router.push('/currentparty');
-      }
+      } else if (!get_auth().auth_status) router.push('/login');
     }
 
     console.log(router.query);

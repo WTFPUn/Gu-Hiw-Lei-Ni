@@ -86,6 +86,16 @@ class Home extends React.Component<HomeProps, HomeState> {
     });
   };
 
+  handle_set_distance = (distance: number) => {
+    const { set_nearby_radius } = this.context as PartySystemContextType;
+    const radius = +distance;
+    set_nearby_radius?.(radius);
+  };
+
+  handle_matchmaking_icon = () => {
+    this.props.router.push('/matchmaking');
+  };
+
   handle_current_party_icon = () => {
     const { currentPartyInfo } = this.context as PartySystemContextType;
     if (currentPartyInfo)
@@ -210,6 +220,13 @@ class Home extends React.Component<HomeProps, HomeState> {
     });
   };
 
+  componentDidMount() {
+    const { set_nearby_radius: setNearbyRadius } = this
+      .context as PartySystemContextType;
+
+    setNearbyRadius?.(this.state.maxDistance);
+  }
+
   render() {
     const { router, auth_status, user } = this.props;
     const { selectedMarker, center, zoom, menu, maxDistance, placeInfo } =
@@ -217,7 +234,8 @@ class Home extends React.Component<HomeProps, HomeState> {
     const isSelected = selectedMarker !== null;
     const partySystem = this.context as PartySystemContextType;
 
-    const { currentLocation, currentPartyInfo, queryPartyInfo } = partySystem;
+    const { currentLocation, currentPartyInfo, queryPartyInfo, nearbyCluster } =
+      partySystem;
 
     const { w, h } = meters2ScreenPixels(
       maxDistance * 1000 * 2,
@@ -235,6 +253,59 @@ class Home extends React.Component<HomeProps, HomeState> {
       HTMLDivElement,
       DrawerContainerProps
     >((props, ref) => <DrawerContainer {...props} forwardRef={ref} />);
+
+    const partyItem = (nearbyCluster ?? []).map((cluster, clusterIndex) =>
+      cluster.parties.map((location, index) => (
+        <PartyItem
+          key={index + 'hiwcluster' + clusterIndex}
+          name={location.party_name}
+          distance={calculateDistance(
+            currentLocation ?? {
+              lat: location.lat,
+              lng: location.lng,
+            },
+            {
+              lat: location.lat,
+              lng: location.lng,
+            },
+          )}
+          onClick={() =>
+            this.handle_click_marker(location.lat, location.lng, location.id)
+          }
+        />
+      )),
+    );
+
+    const partyCluster = (nearbyCluster ?? []).map((cluster, clusterIndex) => {
+      if (
+        this.state?.zoom != null &&
+        this.state.zoom <= 14 &&
+        cluster.parties.length > 1
+      )
+        return (
+          <ClusterMarker
+            lat={testLocations[0].lat}
+            lng={testLocations[0].lng}
+            partiesSize={cluster.parties.length}
+          />
+        );
+      return cluster.parties.map((location, index) => {
+        return (
+          <HiwMarker
+            key={index + 'hiwcluster' + clusterIndex}
+            lat={location.lat}
+            lng={location.lng}
+            onClick={this.handle_click_marker}
+            partyId={location.id}
+            data-test={'hiw-' + index}
+            active={
+              selectedMarker?.lat === location.lat &&
+              selectedMarker?.lng === location.lng
+            }
+          />
+        );
+      });
+    });
 
     return (
       <Layout>
@@ -294,42 +365,21 @@ class Home extends React.Component<HomeProps, HomeState> {
                   <div className="w-5 h-5 bg-blue-500 rounded-full shadow-2xl border-2 border-white translate-x-[-25%] translate-y-[-25%]" />
                 </Marker>
               )}
-              {[
-                { cluster_coords: currentLocation, parties: testLocations },
-              ].map((cluster, clusterIndex) => {
-                if (
-                  this.state?.zoom != null &&
-                  this.state.zoom <= 14 &&
-                  cluster.parties.length > 1
-                )
-                  return (
-                    <ClusterMarker
-                      lat={testLocations[0].lat}
-                      lng={testLocations[0].lng}
-                      partiesSize={cluster.parties.length}
-                    />
-                  );
-                return cluster.parties.map((location, index) => {
-                  return (
-                    <HiwMarker
-                      key={index + 'hiwcluster' + clusterIndex}
-                      lat={location.lat}
-                      lng={location.lng}
-                      onClick={this.handle_click_marker}
-                      partyId={''}
-                      data-test={'hiw-' + index}
-                      active={
-                        selectedMarker?.lat === location.lat &&
-                        selectedMarker?.lng === location.lng
-                      }
-                    />
-                  );
-                });
-              })}
 
-              <Marker lat={center?.lat ?? 0} lng={center?.lng ?? 0}>
-                {/* current center on map */}
-              </Marker>
+              {currentPartyInfo && (
+                <HiwMarker
+                  lat={currentPartyInfo?.lat}
+                  lng={currentPartyInfo?.lng}
+                  onClick={this.handle_click_marker}
+                  partyId={currentPartyInfo?.id}
+                  data-test="hiw-current-party"
+                  active={
+                    selectedMarker?.lat === currentPartyInfo?.lat &&
+                    selectedMarker?.lng === currentPartyInfo?.lng
+                  }
+                />
+              )}
+              {partyCluster}
             </GoogleMapReact>
           </div>
           <div className="absolute left-1/2 top-1/2">
@@ -383,7 +433,23 @@ class Home extends React.Component<HomeProps, HomeState> {
                 )}
               >
                 <div className="pb-4 flex justify-center gap-6">
-                  {/* <IconButton img={'/magnifyingglass.png'} text="Matchmaking" /> */}
+                  <IconButton
+                    img={
+                      currentPartyInfo
+                        ? '/magnifyingbw.png'
+                        : '/magnifyingglass.png'
+                    }
+                    text="Matchmaking"
+                    data-test="match-making"
+                    onClick={this.verify_location_permission(
+                      this.verify_party(
+                        e => {
+                          this.handle_matchmaking_icon();
+                        },
+                        { not: true },
+                      ),
+                    )}
+                  />
                   {
                     <IconButton
                       img={currentPartyInfo ? '/sushi.png' : '/bwsushi.png'}
@@ -421,7 +487,6 @@ class Home extends React.Component<HomeProps, HomeState> {
                       { value: '3', text: '3 km' },
                       { value: '2', text: '2 km' },
                       { value: '1', text: '1 km' },
-                      { value: '0.5', text: '0.5 km' },
                     ]}
                     ref={(ref: DropdownForm) =>
                       (this.DistanceDropdownRef = ref)
@@ -430,13 +495,16 @@ class Home extends React.Component<HomeProps, HomeState> {
                       this.setState({
                         maxDistance: Number(e.target.value),
                       });
+                      this.handle_set_distance(Number(e.target.value));
                     }}
                   />
                   <div
                     className="flex justify-between text-xs"
                     data-test="query-result"
                   >
-                    <span data-test="query-result-text">Found: 3 Party</span>
+                    <span data-test="query-result-text">
+                      Found: {partyItem?.length ?? 0} Party
+                    </span>
                     <a
                       onClick={this.handle_show_search_location}
                       className="text-red-500 underline"
@@ -454,16 +522,7 @@ class Home extends React.Component<HomeProps, HomeState> {
                     )}
                     data-test="party-list-holder"
                   >
-                    <PartyList>
-                      <PartyItem name="Test Party" distance={0.2} />
-                      <PartyItem name="Test Party" distance={0.2} />
-                      <PartyItem name="Test Party" distance={0.2} />
-                      <PartyItem name="Test Party" distance={0.2} />
-                      <PartyItem name="Test Party" distance={0.2} />
-                      <PartyItem name="Test Party" distance={0.2} />
-                      <PartyItem name="Test Party" distance={0.2} />
-                      <PartyItem name="Test Party" distance={0.2} />
-                    </PartyList>
+                    <PartyList>{partyItem}</PartyList>
                   </div>
                 </div>
               </DrawerContainer>

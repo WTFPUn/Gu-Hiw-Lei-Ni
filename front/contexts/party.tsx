@@ -32,10 +32,15 @@ export type PartyInfo = {
 export type PartyMarker = {
   lat: number;
   lng: number;
-  party_id: string;
+  id: string;
+  party_name: string;
 };
 
-export type ClusterMarker = {};
+export type ClusterMarker = {
+  lat: number;
+  lng: number;
+  parties: PartyMarker[];
+};
 
 export type Message = {
   type: string;
@@ -96,17 +101,17 @@ export type PartySystemContextType = {
    */
   queryPartyInfo?: PartyInfo | null;
   /**
-   * The search range to search for nearby parties.
+   * The search range to search for nearby cluster of parties.
    */
   nearbyRadius?: number;
   /**
-   * The nearby parties.
+   * The nearby cluster of parties.
    */
-  nearbyParties?: PartyMarker[];
+  nearbyCluster?: ClusterMarker[];
   /**
-   * The websocket ready state.
+   * sets the search range to search for nearby cluster of parties.
    */
-  setNearbyRadius?: (radius: number) => void;
+  set_nearby_radius?: (radius: number) => void;
   /**
    * The last json message received from the websocket.
    */
@@ -175,6 +180,13 @@ export type PartySystemContextType = {
    * @requires currentPartyInfo
    */
   close_party?: () => void;
+  /**
+   * Matchmaking
+   * @requires currentLocation
+   * @param radius - The radius to search for nearby parties.
+   * @param budget - The budget of the user.
+   */
+  matchmaking?: (radius: number, budget: string) => void;
 };
 
 export const PartySystemContext = React.createContext<PartySystemContextType>(
@@ -330,10 +342,45 @@ export default function PartySystemProvider({
     }
   };
 
+  const search_nearby_parties = () => {
+    if (systemState?.currentLocation) {
+      send('ws', 'partyhandler', {
+        type: 'search_party',
+        lat: systemState.currentLocation.lat,
+        lng: systemState.currentLocation.lng,
+        radius: systemState.nearbyRadius ?? 4,
+      });
+    }
+  };
+
+  const set_nearby_radius = (radius: number) => {
+    setSystemState(state => {
+      return { ...state, nearbyRadius: radius };
+    });
+  };
+
+  const matchmaking = (radius: number, budget: string) => {
+    if (systemState?.currentLocation) {
+      send('ws', 'partyhandler', {
+        type: 'match_making',
+        lat: systemState.currentLocation.lat,
+        lng: systemState.currentLocation.lng,
+        radius: radius ?? 4,
+        budget: budget ?? 'medium',
+      });
+    }
+  };
+
   const handle_socket_message = async () => {
     const message = lastJsonMessage as any;
     // if message is null or undefined or invalid
-    if (!(message?.type || typeof message?.success == 'boolean')) {
+    if (
+      !(
+        message?.type ||
+        typeof message?.success == 'boolean' ||
+        message?.cluster
+      )
+    ) {
       console.log('unhandled message', message);
       return;
     }
@@ -357,8 +404,8 @@ export default function PartySystemProvider({
         switch (message.data?.type) {
           case 'party':
             console.log('query party');
-            if (message.data?.id) {
-              let partyData = message?.data as PartyInfo;
+            if (message.data?.data?.id) {
+              let partyData = message?.data.data as PartyInfo;
               const partyImage = await get_place_photo_client(
                 partyData?.place_id,
               );
@@ -367,6 +414,7 @@ export default function PartySystemProvider({
                 ...partyData,
                 image: partyImage,
               };
+              console.log('party data', partyData);
               // if user is in the party, set current party info to the party data
               if (
                 Object.values(partyData?.members ?? {}).find(
@@ -475,6 +523,10 @@ export default function PartySystemProvider({
           });
           break;
       }
+    } else if (typeof message?.cluster?.data == 'object') {
+      setSystemState(state => {
+        return { ...state, nearbyCluster: message.cluster.data };
+      });
     }
   };
 
@@ -483,6 +535,7 @@ export default function PartySystemProvider({
       navigator.geolocation.getCurrentPosition(
         position => {
           // console.log(position.coords);
+
           setSystemState(state => {
             return {
               ...state,
@@ -510,7 +563,7 @@ export default function PartySystemProvider({
     update_current_location();
     updateInterval = setInterval(() => {
       update_current_location();
-    }, 1500);
+    }, 5000);
 
     window.addEventListener('tokenChange', handle_socket_open);
     return () => {
@@ -518,6 +571,12 @@ export default function PartySystemProvider({
       window.removeEventListener('tokenChange', handle_socket_open);
     };
   }, []);
+
+  React.useEffect(() => {
+    if (get_auth().auth_status) {
+      search_nearby_parties();
+    }
+  }, [systemState?.currentLocation, systemState?.nearbyRadius]);
 
   // value that is return to the context
   // this value is memoized to prevent unnecessary rerender
@@ -542,6 +601,8 @@ export default function PartySystemProvider({
             : undefined,
           start_party: isHost ? start_party : undefined,
           close_party: isHost ? close_party : undefined,
+          set_nearby_radius,
+          matchmaking: !isInParty ? matchmaking : undefined,
         }
       : {};
 
