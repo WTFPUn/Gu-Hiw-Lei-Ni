@@ -102,3 +102,14 @@ Cypress.Commands.add('mockGeolocation', (coords: number[]) => {
     }),
   );
 });
+
+Cypress.Commands.add('cleanWebsocket', () => {
+  cy.log(Cypress.env('TEST_KEY'));
+  const env = Cypress.env();
+  cy.request('POST', env.API_URL + '/clean_ws', {
+    test_key: Cypress.env('TEST_KEY'),
+  }).should(res => {
+    expect(res.status).to.equal(200);
+    expect(res.body).to.have.property('status', true);
+  });
+});

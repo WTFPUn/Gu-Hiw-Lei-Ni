@@ -4,17 +4,18 @@ import locations from '../../fixtures/locations.json';
 describe('party system', () => {
   beforeEach(() => {
     cy.task('resetDatabase');
+    cy.cleanWebsocket();
     cy.register(users[0]);
     cy.register(users[1]);
     cy.visit('/login');
     cy.logout();
   });
-  describe('create party', () => {
+  describe('create and join party', () => {
     it('should create party successfully', () => {
-      cy.mockGeolocation(locations[0]);
+      cy.mockGeolocation(locations[10]);
       cy.login(users[0].username, users[0].password);
+      cy.wait(3000);
       cy.get('[src="/rice.png"]', { timeout: 5000 }).should('be.visible');
-      cy.wait(1500);
       cy.get('[data-test="create-party-btn"]').click();
       cy.get('[data-test="location-text"]').should($input => {
         expect($input).not.to.value('Move the map to update location');

@@ -14,6 +14,7 @@ declare global {
       }): Chainable<null>;
       logout(): Chainable<null>;
       mockGeolocation(coords: number[]): Chainable<null>;
+      cleanWebsocket(): Chainable<null>;
     }
   }
 }
