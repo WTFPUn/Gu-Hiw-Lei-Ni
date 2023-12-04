@@ -158,18 +158,21 @@ class WebSocketMultiplexer:
             return
 
         except AssertionError as e:
+            self.logger.error(e)
             await websocket.send_json({"type": "error", "data": str(e)})
             await websocket.close()
             return
         except HandleRequestError as e:
+            self.logger.error(e)
             await websocket.send_json({"type": "error", "data": str(e)})
             await websocket.close()
             return
         except PubSubChannelError as e:
+            self.logger.error(e)
             await websocket.send_json({"type": "error", "data": str(e)})
             return
         except Exception as e:
-            print(e)
+            self.logger.error(e)
             await websocket.close()
             return
 
