@@ -45,7 +45,7 @@ class LeavePartyRequest(BaseModel):
 
 
 class KickPartyRequest(BaseModel):
-    type: Literal["kick_party"] = "kick_party"
+    type: Literal["kick_member"] = "kick_member"
     party_id: str
     user_id: str
 
