@@ -12,9 +12,9 @@ describe('party system', () => {
   });
   describe('create and join party', () => {
     it('should create party successfully', () => {
-      cy.mockGeolocation(locations[10]);
+      cy.mockGeolocation(locations[0]);
       cy.login(users[0].username, users[0].password);
-      cy.wait(3000);
+      cy.wait(1000);
       cy.get('[src="/rice.png"]', { timeout: 5000 }).should('be.visible');
       cy.get('[data-test="create-party-btn"]').click();
       cy.get('[data-test="location-text"]').should($input => {
@@ -37,8 +37,29 @@ describe('party system', () => {
       cy.get('[data-test="budget"]').select('$$$');
       cy.get('[data-test="party-size"]').type('12');
       cy.get('[data-test="create-party-btn"]').click();
-      cy.wait(3000);
+      cy.wait(2500);
       cy.url().should('include', '/currentparty');
+
+      cy.get('[data-test="party-name"]').should('have.text', 'test party 1');
+      cy.get('[data-test="table-row-secondaryparty-description"]').should(
+        'have.text',
+        'test party 1 description',
+      );
+
+      cy.logout();
+
+      cy.mockGeolocation(locations[1]);
+      cy.login(users[1].username, users[1].password);
+      cy.wait(3000);
+
+      cy.get('[data-test="hiw-0"]').click({ force: true });
+      cy.get('[data-test="join-btn"]').click();
+      cy.get('[data-test="more-info-btn"]').click();
+      cy.get('[data-test="party-name"]').should('have.text', 'test party 1');
+      cy.get('[data-test="table-row-secondaryparty-description"]').should(
+        'have.text',
+        'test party 1 description',
+      );
     });
   });
 });

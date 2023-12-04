@@ -10,16 +10,23 @@ function Member(props: {
   img?: string;
   first_name: string;
   last_name: string;
+  'data-test'?: string;
 }) {
   return (
-    <div className="flex gap-2 items-center" data-test="member">
+    <div
+      className="flex gap-2 items-center"
+      data-test={'member' + props['data-test']}
+    >
       <img
         src={props.img ?? '/meat.png'}
         alt=""
         className="w-8 h-8 bg-slate-500 rounded-full"
         data-test="member-img"
       />
-      <div className="text-sm font-medium" data-test="member-name">
+      <div
+        className="text-sm font-medium"
+        data-test={'member-name' + props['data-test']}
+      >
         {props.first_name + ' ' + props.last_name}
       </div>
     </div>
@@ -33,13 +40,14 @@ class InfoTable extends React.Component<InfoTableProps> {
     const members = Object.values(partyInfo.members ?? {}).map?.(member => {
       return (
         <>
-          <Member {...member} /> <br />
+          <Member {...member} />
+          <div className="p-0.5" />
         </>
       );
     });
     return (
       <Table>
-        <RowItem name="Location">
+        <RowItem name="Location" data-test="party-location">
           <a
             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
               partyInfo?.location || '',
@@ -50,11 +58,15 @@ class InfoTable extends React.Component<InfoTableProps> {
             {partyInfo.location}
           </a>
         </RowItem>
-        <RowItem name="Description">{partyInfo.description}</RowItem>
+        <RowItem name="Description" data-test="party-description">
+          {partyInfo.description}
+        </RowItem>
         {partyInfo?.distance != undefined && (
-          <RowItem name="Distance">{partyInfo.distance + ' km'}</RowItem>
+          <RowItem name="Distance" data-test="party-distance">
+            {partyInfo.distance + ' km'}
+          </RowItem>
         )}
-        <RowItem name="Price">
+        <RowItem name="Price" data-test="party-price">
           <img
             src={
               partyInfo.budget == 'low'
@@ -69,16 +81,18 @@ class InfoTable extends React.Component<InfoTableProps> {
             className="w-16 h-8"
           />
         </RowItem>
-        <RowItem name="Party Size">{partyInfo.size}</RowItem>
-        <RowItem name="Host">
+        <RowItem name="Party Size" data-test="party-size">
+          {partyInfo.size}
+        </RowItem>
+        <RowItem name="Host" data-test="party-host">
           {
-            <div className="flex">
+            <div className="flex" data-test="party-host-item">
               {partyInfo.host ? <Member {...partyInfo.host} /> : <></>}
             </div>
           }
         </RowItem>
         {members?.length > 0 && (
-          <RowItem name="Members">
+          <RowItem name="Members" data-test="party-member">
             <div className="flex flex-wrap flex-col">{members}</div>
           </RowItem>
         )}

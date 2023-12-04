@@ -1,6 +1,7 @@
 type TableRowProps = {
   children?: React.ReactNode;
   name: string;
+  'data-test'?: string;
 };
 
 type TableProps = {
@@ -18,11 +19,13 @@ export function RowItem(props: TableRowProps) {
     <tr data-test="table-row">
       <td
         className="font-medium py-2 pr-2 align-top"
-        data-test="table-row-main"
+        data-test={'table-row-main' + props['data-test']}
       >
         {props.name}
       </td>
-      <td data-test="table-row-secondary">{props.children}</td>
+      <td data-test={'table-row-secondary' + props['data-test']}>
+        {props.children}
+      </td>
     </tr>
   );
 }

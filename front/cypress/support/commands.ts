@@ -113,3 +113,25 @@ Cypress.Commands.add('cleanWebsocket', () => {
     expect(res.body).to.have.property('status', true);
   });
 });
+
+Cypress.Commands.add('createParty', (partyLocation: number[], partyInfo) => {
+  cy.mockGeolocation(partyLocation);
+  const { partyName, partyDescription, budget, partySize } = partyInfo;
+
+  cy.wait(2500);
+  cy.visit('/home');
+  cy.get('[data-test="create-party-btn"]').click();
+  cy.get('[data-test="location-text"]').should($input => {
+    expect($input).not.to.value('Move the map to update location');
+  });
+  cy.get('[data-test="create-party-location-btn"]').click();
+  cy.url().should('include', '/createparty');
+
+  cy.get('[data-test="party-name"]').type(partyName);
+  cy.get('[data-test="party-description"]').type(partyDescription);
+  cy.get('[data-test="budget"]').select(budget);
+  cy.get('[data-test="party-size"]').type(partySize);
+  cy.get('[data-test="create-party-btn"]').click();
+  cy.wait(3000);
+  cy.url().should('include', '/currentparty');
+});

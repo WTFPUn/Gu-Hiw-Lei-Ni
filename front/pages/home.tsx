@@ -119,7 +119,10 @@ class Home extends React.Component<HomeProps, HomeState> {
       });
     }
   };
-  handle_join_party = () => {};
+  handle_join_party = () => {
+    const partySystem = this.context as PartySystemContextType;
+    partySystem.join_party?.(this.state.selectedMarker?.party_id as string);
+  };
   handle_leave_party = () => {
     const partySystem = this.context as PartySystemContextType;
     partySystem.leave_party?.();
@@ -662,11 +665,7 @@ class Home extends React.Component<HomeProps, HomeState> {
                                 <Button
                                   text="Join"
                                   primary
-                                  onClick={() =>
-                                    partySystem.join_party?.(
-                                      'f136db1e-c5f3-49b9-b5f2-7216366bab9c',
-                                    )
-                                  }
+                                  onClick={this.handle_join_party}
                                   data-test="join-btn"
                                 />
                               )}
