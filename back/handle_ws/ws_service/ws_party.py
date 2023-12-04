@@ -457,13 +457,14 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                         or party.status != "not_started"
                     ):
                         continue
-                    if party.get_distance_from_point(lat, lng) < radius:
+                    party_in_radius = party.get_distance_from_point(lat, lng) < radius
+                    if party_in_radius:
                         radius_filter.add(party.id)
-                    if party.budget == budget:
+                    if party.budget == budget and party_in_radius:
                         budget_filter.add(party.id)
 
                 parties = radius_filter.intersection(budget_filter)
-                if len(parties) == 0:
+                if len(parties) == 0 and budget is None:
                     parties = radius_filter.union(budget_filter)
 
                 if len(parties) == 0:
