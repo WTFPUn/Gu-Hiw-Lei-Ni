@@ -44,6 +44,12 @@ class LeavePartyRequest(BaseModel):
     party_id: str
 
 
+class KickPartyRequest(BaseModel):
+    type: Literal["kick_party"] = "kick_party"
+    party_id: str
+    user_id: str
+
+
 class ClosePartyRequest(BaseModel):
     type: Literal["close_party"] = "close_party"
     party_id: str
@@ -78,6 +84,7 @@ PartyHandlerRequest = Annotated[
         SearchParty,
         LeavePartyRequest,
         MatchMakingRequest,
+        KickPartyRequest,
     ],
     Field(discriminator="type"),
 ]
@@ -491,6 +498,34 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                     client,
                     service,
                 )
+
+        elif isinstance(request, KickPartyRequest):
+            channel = "party", request.party_id
+            current_party: ReferenceParty = self.pub_sub.get(channel).data
+            user_id = client.token_data.user_id
+
+            if current_party.host.user_id != user_id:
+                raise Exception("Only host can kick party")
+
+            if request.user_id not in current_party.members:
+                await client.callback(
+                    {"success": False, "message": "User is not in party"}
+                )
+                return True
+
+            current_party.members.pop(request.user_id)
+            self.mongo_client["GuHiw"]["Party"].find_one_and_update(
+                {"id": request.party_id}, {"$pull": {"members": request.user_id}}
+            )
+
+            self.pub_sub.unregister(("current_party", request.user_id))
+            await self.pub_sub.publish(
+                channel, PartyResponse(type="party", data=current_party)
+            )
+
+            await client.callback(
+                {"success": True, "message": "Successfully kick user"}
+            )
 
         else:
             return False
