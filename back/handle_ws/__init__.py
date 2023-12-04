@@ -98,9 +98,8 @@ class WebSocketMultiplexer:
                             self.clients[tokendata.user_id].ws.client_state
                             == WebSocketState.DISCONNECTED
                         ):
-                            self.clients[
-                                tokendata.user_id
-                            ].callback = websocket.send_json
+                            self.clients[tokendata.user_id].ws = websocket
+
                             await websocket.send_json(
                                 {"type": "success", "data": "reconnected"}
                             )
