@@ -1,16 +1,8 @@
 import Button from '@/components/common/Button';
 import Layout from '@/components/common/Layout';
 import DropdownForm from '@/components/form/DropdownForm';
-import TextForm from '@/components/form/TextForm';
-import InfoTable from '@/components/party/InfoTable';
-import {
-  PartyInfo,
-  PartySystemContext,
-  PartySystemContextType,
-} from '@/contexts/party';
+import { PartySystemContext, PartySystemContextType } from '@/contexts/party';
 import { WithAuthProps, get_auth, withAuth } from '@/utils/auth';
-import { calculateDistance } from '@/utils/map';
-import { Coords } from 'google-map-react';
 import { WithRouterProps } from 'next/dist/client/with-router';
 import { withRouter } from 'next/router';
 import React from 'react';
@@ -58,10 +50,11 @@ class Matchmaking extends React.Component<MatchmakingProps, MatchmakingState> {
         budget: formData.get('price'),
       };
       try {
-        for (let fieldValue of Object.values(partyData)) {
-          if (fieldValue == '') {
-            throw Error('Please fill in all fields');
-          }
+        if (partyData.radius == '') {
+          throw Error('Please fill in all fields');
+        }
+        if (partyData.budget == '') {
+          partyData.budget = null;
         }
 
         this.setState({
@@ -143,6 +136,7 @@ class Matchmaking extends React.Component<MatchmakingProps, MatchmakingState> {
                   required
                   name="price"
                   options={[
+                    { text: 'Any budget', value: '' },
                     { text: '$', value: 'low' },
                     { text: '$$$', value: 'medium' },
                     { text: '$$$$$', value: 'high' },
