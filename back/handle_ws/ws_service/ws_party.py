@@ -409,6 +409,15 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                 {"id": request.party_id}, {"$set": {"status": "finished"}}
             )
 
+            list_party_channel: Channel = ("list_party",)
+            current_list_party: ListPartyPositionMessage = self.pub_sub.get(list_party_channel).data  # type: ignore
+            current_list_party.list_party.pop(request.party_id)
+
+            await self.pub_sub.publish(
+                list_party_channel,
+                ListPartyResponse(type="list_party", data=current_list_party),
+            )
+
             if not access_status:
                 await client.callback(
                     {
