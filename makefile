@@ -23,12 +23,15 @@ run-back:
 init-front:
 	npm install --prefix front
 
-run-front:
+copy-env-front:
+	cp -v .env front/.env
+
+run-front: copy-env-front
 	npm run env_dev --prefix front
 
 init: init-back init-front
 
-test-e2e:
+test-e2e: copy-env-front
 	npm run cypress:open --prefix front
 
 	

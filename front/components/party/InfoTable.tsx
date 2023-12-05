@@ -29,8 +29,9 @@ function Member(props: {
             ? ''
             : ' invisible')
         }
+        data-test={'remove-member' + props['data-test']}
       >
-        <img src="/removemember.svg" alt="asd" className="w-4 h-4" />
+        <img src="/removemember.svg" alt="x" className="w-4 h-4" />
       </button>
       <img
         src={props.img ?? '/meat.png'}
