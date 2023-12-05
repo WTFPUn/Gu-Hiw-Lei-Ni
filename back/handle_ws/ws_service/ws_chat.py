@@ -1,21 +1,10 @@
 from __future__ import annotations
-from ast import dump
-import os
-import jwt
-import asyncio
-from uuid import uuid4
-from math import sqrt, pi, cos, asin
-from pub_sub import Channel
+
 from handle_ws.client import Client
 from handle_ws.ws_service import WebSocketService
 from pydantic import BaseModel, Field
-from typing import Literal, Union, Annotated, Tuple, Dict, List
-import json
+from typing import Literal, Union, Annotated, Tuple, Dict
 from type.ws.response_ws import ResponseWs
-
-from type.User import User
-from type.party import Party, ReferenceParty
-from type.client_cookie import ClientCookie
 from type.ws.response_ws import ResponseWs
 from type.chat import Chat, UserChatMessage, LeaveMessage, JoinMessage
 
@@ -44,6 +33,12 @@ class SendMessageRequest(BaseModel):
 class CloseChatRequest(BaseModel):
     type: Literal["close_chat"] = "close_chat"
     session_id: str
+
+
+class RemoveMemberRequest(BaseModel):
+    type: Literal["remove_chat_member"] = "remove_chat_member"
+    session_id: str
+    user_id: str
 
 
 class ChatResponse(ResponseWs):
@@ -238,6 +233,63 @@ class ChatHandler(WebSocketService[ChatHandleRequest]):
             )
             channel: SessionPartyChannel = ("session", session_id)
             self.pub_sub.unregister(channel)
+
+        elif isinstance(request, RemoveMemberRequest):
+            session_id = request.session_id
+            to_remove_user_id = request.user_id
+
+            val_party = await self.__validate_db(
+                client,
+                self.mongo_client["GuHiw"]["Party"].find_one({"id": session_id}),
+                "Party not found",
+            )
+
+            val_session = await self.__validate_db(
+                client,
+                self.mongo_client["GuHiw"]["Chat"].find_one({"session_id": session_id}),
+                "Chat not found",
+            )
+
+            if val_party or val_session:
+                await client.callback(
+                    {"type": "error", "error": "Unsuccessfully remove member"}
+                )
+                return True
+
+            channel: SessionPartyChannel = ("session", session_id)
+            sub_client = self.pub_sub.subscribers[channel]
+            remove_client = None
+            for client in sub_client:
+                if to_remove_user_id == client.token_data.user_id:
+                    self.pub_sub.unsubscribe(channel, client)
+                    remove_client = client
+                    break
+
+            if remove_client is None:
+                await client.callback(
+                    {"type": "error", "error": "Unsuccessfully remove member"}
+                )
+                return True
+
+            chat: Chat = self.pub_sub.get(channel).data  # type: ignore
+            remove_message = LeaveMessage(
+                client.token_data.first_name, client.token_data.last_name
+            )
+
+            chat.dialogues.append(remove_message)
+
+            dump_dialogues = remove_message.model_dump()
+            chat_db = self.mongo_client["GuHiw"]["Chat"].find_one_and_update(
+                {"session_id": session_id}, {"$push": {"dialogues": dump_dialogues}}
+            )
+
+            if chat_db is None:
+                await client.callback(
+                    {"type": "error", "error": "Unsuccessfully remove member"}
+                )
+                return True
+
+            await self.pub_sub.publish(channel, ChatResponse(type="chat", data=chat))
 
         else:
             return False
