@@ -505,7 +505,7 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
             user_id = client.token_data.user_id
 
             if current_party.host.user_id != user_id:
-                raise Exception("Only host can kick party")
+                raise Exception("Only host can kick member")
 
             if request.user_id not in current_party.members:
                 await client.callback(
