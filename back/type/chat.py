@@ -11,9 +11,9 @@ time_stamp = ClassVar[datetime]
 
 class Message(BaseModel):
     type: str
-    message_id: str = str(uuid4())
+    message_id: str = Field(default_factory=lambda: str(uuid4()))
     message: str
-    timestamp: str = str(datetime.now())
+    timestamp: str = Field(default_factory=lambda: str(datetime.now()))
 
 
 class UserChatMessage(Message):

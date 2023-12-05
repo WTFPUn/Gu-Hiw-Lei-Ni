@@ -23,7 +23,7 @@ class Party(BaseModel):
     place_id: Optional[str] = None
     location: Optional[str] = None
     members: list[User] | Dict[UserId, User] = []
-    created_timestamp: str = str(datetime.now())
+    created_timestamp: str = Field(default_factory=lambda: str(datetime.now()))
     status: Literal[
         "not_started", "in_progress", "finished", "cancelled"
     ] = "not_started"
