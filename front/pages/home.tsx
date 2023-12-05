@@ -24,7 +24,11 @@ import {
 } from '@/utils/map';
 import Link from 'next/link';
 import TextForm from '@/components/form/TextForm';
-import { PartySystemContext, PartySystemContextType } from '@/contexts/party';
+import {
+  MemberType,
+  PartySystemContext,
+  PartySystemContextType,
+} from '@/contexts/party';
 
 type HomeState = {
   center: Coords | null;
@@ -181,7 +185,6 @@ class Home extends React.Component<HomeProps, HomeState> {
     const { currentLocation } = this.context as PartySystemContextType;
     if (!currentLocation || !center) return false;
     const distance = calculateDistance(currentLocation, center);
-    console.log(distance);
     if (distance > maxDistance) {
       return false;
     }
@@ -193,7 +196,6 @@ class Home extends React.Component<HomeProps, HomeState> {
     if (this.state.menu != 'createparty') return;
     if (this.check_valid_create_location()) {
       const places = await find_place_info(this.state.center as any);
-      console.log(places);
       this.setState({
         placeInfo: places?.[0],
       });
@@ -245,8 +247,6 @@ class Home extends React.Component<HomeProps, HomeState> {
       currentLocation ?? { lat: 0.0, lng: 0.0 },
       zoom || 0,
     );
-
-    console.log(zoom);
 
     const DrawerPartyDiv = React.forwardRef<
       HTMLDivElement,
@@ -655,13 +655,20 @@ class Home extends React.Component<HomeProps, HomeState> {
                                 members: null,
                               } as any
                             }
+                            onRemoveMember={partySystem?.kick_member}
                           />
 
                           <div className="pb-4 pt-4 w-full flex flex-col gap-2">
                             {/* not in party */}
                             {!currentPartyInfo &&
                               queryPartyInfo?.status == 'not_started' &&
-                              currentLocation && (
+                              currentLocation &&
+                              Object.keys(
+                                queryPartyInfo.members as Record<
+                                  string,
+                                  MemberType
+                                >,
+                              ).length < (queryPartyInfo.size ?? 2) && (
                                 <Button
                                   text="Join"
                                   primary

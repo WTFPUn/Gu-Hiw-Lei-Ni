@@ -187,6 +187,12 @@ export type PartySystemContextType = {
    * @param budget - The budget of the user.
    */
   matchmaking?: (radius: number, budget: string) => void;
+  /**
+   * Kicks a member from the party.
+   * @requires currentPartyInfo
+   * @param user_id - The user id of the member to kick.
+   */
+  kick_member?: (user_id: string) => void;
 };
 
 export const PartySystemContext = React.createContext<PartySystemContextType>(
@@ -232,15 +238,15 @@ export default function PartySystemProvider({
     data?: object,
     channel?: string[],
   ) => {
-    const authInfo = get_auth();
     const token = localStorage.getItem('token');
-    sendJsonMessage({
-      type,
-      token: authInfo.auth_status ? token : undefined,
-      service: service ?? undefined,
-      data,
-      channel,
-    });
+    if (token)
+      sendJsonMessage({
+        type,
+        token: token,
+        service: service ?? undefined,
+        data,
+        channel,
+      });
   };
 
   const handle_socket_open = () => {
@@ -371,6 +377,16 @@ export default function PartySystemProvider({
     }
   };
 
+  const kick_member = (user_id: string) => {
+    if (systemState?.currentPartyInfo?.id) {
+      send('ws', 'partyhandler', {
+        type: 'kick_member',
+        party_id: systemState?.currentPartyInfo?.id,
+        user_id,
+      });
+    }
+  };
+
   const handle_socket_message = async () => {
     const message = lastJsonMessage as any;
     // if message is null or undefined or invalid
@@ -392,6 +408,7 @@ export default function PartySystemProvider({
         // handling ws connect success message
         switch (message?.data) {
           case 'connected':
+            console.log('successfully connected websocket');
           case 'reconnected':
             console.log('successfully authenticated websocket');
             fetch_current_party();
@@ -475,7 +492,12 @@ export default function PartySystemProvider({
         image: partyImage,
       };
       // if user is in the party, set current party info to the party data
-      if (['finished', 'cancelled'].includes(partyData?.status ?? '')) {
+      if (
+        ['finished', 'cancelled'].includes(partyData?.status ?? '') ||
+        !Object.keys(partyData.members ?? {}).includes(
+          get_auth().user?.user_id ?? '',
+        )
+      ) {
         setSystemState(state => {
           return { ...state, currentPartyInfo: null };
         });
@@ -603,6 +625,7 @@ export default function PartySystemProvider({
           close_party: isHost ? close_party : undefined,
           set_nearby_radius,
           matchmaking: !isInParty ? matchmaking : undefined,
+          kick_member: isHost ? kick_member : undefined,
         }
       : {};
 
