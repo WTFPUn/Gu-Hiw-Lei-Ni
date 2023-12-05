@@ -12,7 +12,7 @@ UserId = str
 
 
 class Party(BaseModel):
-    id: str = str(uuid4())
+    id: str = Field(default_factory=lambda: str(uuid4()))
     party_name: str
     size: int
     description: str
