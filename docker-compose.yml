@@ -23,6 +23,7 @@ services:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - NEXT_PUBLIC_WS_API_URL=${NEXT_PUBLIC_WS_API_URL}
       - NEXT_PUBLIC_GOOGLE_API_KEY=${GOOGLE_API_KEY}
-      - PORT=3000
-      - HOST=0.0.0.0
+      - TEST_KEY=${TEST_KEY}
+      - PORT=${FRONT_PORT}
+      - HOST=${FRONT_HOST}
     restart: unless-stopped

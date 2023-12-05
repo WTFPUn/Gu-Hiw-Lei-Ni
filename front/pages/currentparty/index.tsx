@@ -108,6 +108,7 @@ class PartyDetail extends React.Component<PartyDetailProps, PartyDetailState> {
                     ...currentPartyInfo,
                   } as any
                 }
+                onRemoveMember={partySystem?.kick_member}
               />
             </div>
           </div>
