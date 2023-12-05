@@ -34,7 +34,7 @@ class PubSub:
             self.subscribers[channel] = set()
             self.channel_message[channel] = message
         else:
-            raise PubSubChannelError("Channel already exists")
+            raise PubSubChannelError(f"Channel already exists : {channel} on register")
 
     def unregister(self, channel: Channel):
         copy_subscribers = self.subscribers[channel].copy()
@@ -44,7 +44,7 @@ class PubSub:
             del self.subscribers[channel]
             del self.channel_message[channel]
         else:
-            raise PubSubChannelError("Channel does not exist")
+            raise PubSubChannelError(f"Channel does not exist: {channel} on unregister")
 
     async def publish(self, channel: Channel, message: Any):
         if channel in self.subscribers:
@@ -54,27 +54,29 @@ class PubSub:
                     json.loads(self.channel_message[channel].model_dump_json())
                 )
         else:
-            raise PubSubChannelError("Channel does not exist")
+            raise PubSubChannelError(f"Channel does not exist : {channel} on publish")
 
     def subscribe(self, channel: Channel, client: Client):
         if channel in self.subscribers:
             self.subscribers[channel].add(client)
             client.add_service((self, channel))
         else:
-            raise PubSubChannelError("Channel does not exist")
+            raise PubSubChannelError(f"Channel does not exist: {channel} on subscribe")
 
     def unsubscribe(self, channel: Channel, client: Client):
         if channel in self.subscribers:
             self.subscribers[channel].remove(client)
             client.remove_service((self, channel))
         else:
-            raise PubSubChannelError("Channel does not exist")
+            raise PubSubChannelError(
+                f"Channel does not exist: {channel} on unsubscribe"
+            )
 
     def get(self, channel: Channel) -> BaseModel:
         if channel in self.channel_message:
             return self.channel_message[channel]
         else:
-            raise PubSubChannelError("Channel does not exist")
+            raise PubSubChannelError(f"Channel does not exist: {channel} on get")
 
     def clean(self):
         copy_subscribers = self.subscribers.copy()
