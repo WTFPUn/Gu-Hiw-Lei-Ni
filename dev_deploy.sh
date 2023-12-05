@@ -34,7 +34,7 @@ echo "Checkout to $checkout"
 
 echo "--Check if .env file exists"
 
-if [ ! -f .env.dev ]
+if [ ! -f .env ]
 then
     echo "File .env does not exist."
     echo "Creating .env file using env.example file."
