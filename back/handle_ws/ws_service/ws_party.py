@@ -547,7 +547,8 @@ class PartyHandler(WebSocketService[PartyHandlerRequest]):
                 )
                 if dist < request.radius:
                     party: Party = self.pub_sub.get(("party", party_id))  # type: ignore
-                    parties_in_radius.append(party.data)  # type: ignore
+                    if party.data.status == "not_started":
+                        parties_in_radius.append(party.data)  # type: ignore
 
         mst = MSTClustering(parties_in_radius)
 
