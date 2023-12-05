@@ -585,7 +585,7 @@ export default function PartySystemProvider({
     update_current_location();
     updateInterval = setInterval(() => {
       update_current_location();
-    }, 5000);
+    }, 1000);
 
     window.addEventListener('tokenChange', handle_socket_open);
     return () => {

@@ -514,7 +514,7 @@ class Home extends React.Component<HomeProps, HomeState> {
                       href="#"
                       data-test="query-result-show-all"
                     >
-                      Show All
+                      {this.state.showAll ? 'Show Less' : 'Show All'}
                     </a>
                   </div>
 
