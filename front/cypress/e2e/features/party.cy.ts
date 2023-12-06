@@ -362,7 +362,7 @@ describe('party system', () => {
     cy.get('[data-test="current-party-btn"]').click();
     cy.get('[data-test="more-info-btn"]').click();
     cy.get('[data-test="start-party-btn"]').click();
-    cy.get('[data-test="cancel-party-btn"]').click();
+    cy.get('[data-test="end-party-btn"]').click();
     cy.logout();
     cy.login(user2.username, user2.password);
     cy.get('[data-test="hiw-0-m-0"]').should('not.exist');
