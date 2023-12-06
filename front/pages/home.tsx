@@ -280,6 +280,9 @@ class Home extends React.Component<HomeProps, HomeState> {
     );
 
     const partyCluster = (nearbyCluster ?? []).map((cluster, clusterIndex) => {
+      cluster.parties = cluster.parties.filter(party => {
+        return party.id != currentPartyInfo?.id;
+      });
       if (
         this.state?.zoom != null &&
         this.state.zoom <= 14 &&
@@ -287,27 +290,28 @@ class Home extends React.Component<HomeProps, HomeState> {
       )
         return (
           <ClusterMarker
-            lat={testLocations[0].lat}
-            lng={testLocations[0].lng}
+            lat={cluster.cluster_coord?.[0]}
+            lng={cluster.cluster_coord?.[1]}
             partiesSize={cluster.parties.length}
           />
         );
-      return cluster.parties.map((location, index) => {
-        return (
-          <HiwMarker
-            key={index + 'hiwcluster' + clusterIndex}
-            lat={location.lat}
-            lng={location.lng}
-            onClick={this.handle_click_marker}
-            partyId={location.id}
-            data-test={'hiw-' + index}
-            active={
-              selectedMarker?.lat === location.lat &&
-              selectedMarker?.lng === location.lng
-            }
-          />
-        );
-      });
+      else
+        return cluster.parties.map((location, index) => {
+          return (
+            <HiwMarker
+              key={index + 'hiwcluster' + clusterIndex}
+              lat={location.lat}
+              lng={location.lng}
+              onClick={this.handle_click_marker}
+              partyId={location.id}
+              data-test={'hiw-' + index}
+              active={
+                selectedMarker?.lat === location.lat &&
+                selectedMarker?.lng === location.lng
+              }
+            />
+          );
+        });
     });
 
     return (
@@ -316,7 +320,7 @@ class Home extends React.Component<HomeProps, HomeState> {
           <div
             className={classNames(
               'w-full overflow-hidden transform transition-all duration-500 translate-y',
-              isSelected ? 'h-[150vh] -translate-y-1/3' : 'h-full',
+              isSelected ? 'h-[160dvh] -translate-y-[38%]' : 'h-[100dvh]',
             )}
           >
             {isSelected && (
@@ -337,6 +341,7 @@ class Home extends React.Component<HomeProps, HomeState> {
                   position: 0,
                 },
                 fullscreenControl: false,
+                gestureHandling: 'greedy',
               }}
               yesIWantToUseGoogleMapApiInternals
               onGoogleApiLoaded={({ map, maps, ref }) =>
