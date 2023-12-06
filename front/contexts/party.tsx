@@ -29,17 +29,14 @@ export type PartyInfo = {
   budget?: 'low' | 'medium' | 'high';
 };
 
-export type PartyMarker = {
-  lat: number;
-  lng: number;
+export type PartyMarkerInfo = {
   id: string;
   party_name: string;
-};
+} & Coords;
 
-export type ClusterMarker = {
-  lat: number;
-  lng: number;
-  parties: PartyMarker[];
+export type ClusterMarkerInfo = {
+  cluster_coord: [number, number];
+  parties: PartyMarkerInfo[];
 };
 
 export type Message = {
@@ -107,7 +104,7 @@ export type PartySystemContextType = {
   /**
    * The nearby cluster of parties.
    */
-  nearbyCluster?: ClusterMarker[];
+  nearbyCluster?: ClusterMarkerInfo[];
   /**
    * sets the search range to search for nearby cluster of parties.
    */
@@ -372,7 +369,7 @@ export default function PartySystemProvider({
         lat: systemState.currentLocation.lat,
         lng: systemState.currentLocation.lng,
         radius: radius ?? 4,
-        budget: budget ?? 'medium',
+        budget: budget ?? undefined,
       });
     }
   };
