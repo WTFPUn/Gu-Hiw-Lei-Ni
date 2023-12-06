@@ -293,6 +293,7 @@ class Home extends React.Component<HomeProps, HomeState> {
             lat={cluster.cluster_coord?.[0]}
             lng={cluster.cluster_coord?.[1]}
             partiesSize={cluster.parties.length}
+            data-test={'hiw-cluster-' + clusterIndex}
           />
         );
       else
@@ -304,7 +305,7 @@ class Home extends React.Component<HomeProps, HomeState> {
               lng={location.lng}
               onClick={this.handle_click_marker}
               partyId={location.id}
-              data-test={'hiw-' + index}
+              data-test={'hiw-' + index + '-m-' + clusterIndex}
               active={
                 selectedMarker?.lat === location.lat &&
                 selectedMarker?.lng === location.lng

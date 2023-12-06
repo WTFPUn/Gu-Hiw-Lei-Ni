@@ -55,13 +55,10 @@ class Register extends React.Component<RegisterProps, {}> {
           const text = await res.text();
           throw Error('Cannot create new user: ' + text);
         }
-        console.log(res);
         this.props.router.push('/login');
       } catch (e: any) {
         alert(e.message);
       }
-
-      console.log(data);
     }
   }
 

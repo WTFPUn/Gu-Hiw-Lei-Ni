@@ -41,6 +41,7 @@ Cypress.Commands.add('login', (username: string, password: string) => {
   cy.get('input[name=username]').type(username);
   cy.get('input[name=password]').type(`${password}{enter}`, { log: false });
   cy.url().should('include', '/home');
+  cy.wait(2000);
 });
 
 Cypress.Commands.add(
@@ -51,6 +52,7 @@ Cypress.Commands.add(
     lastName: string;
     password: string;
   }) => {
+    cy.log('registering a user');
     cy.request('POST', Cypress.env('API_URL') + '/auth/register', {
       user_name: user.username,
       first_name: user.firstName,
@@ -64,6 +66,7 @@ Cypress.Commands.add(
 );
 
 Cypress.Commands.add('logout', () => {
+  cy.log('logging out');
   if (localStorage.getItem('token') !== null) {
     localStorage.removeItem('token');
   }
@@ -72,6 +75,7 @@ Cypress.Commands.add('logout', () => {
       cy.visit('/login');
     }
   });
+  // cy.wait(3000);
 });
 
 Cypress.Commands.add('mockGeolocation', (coords: number[]) => {
@@ -114,24 +118,61 @@ Cypress.Commands.add('cleanWebsocket', () => {
   });
 });
 
-Cypress.Commands.add('createParty', (partyLocation: number[], partyInfo) => {
-  cy.mockGeolocation(partyLocation);
-  const { partyName, partyDescription, budget, partySize } = partyInfo;
+Cypress.Commands.add(
+  'createParty',
+  (partyInfo: {
+    partyName: string;
+    partyDescription: string;
+    budget: string;
+    partySize: number;
+  }) => {
+    const { partyName, partyDescription, budget, partySize } = partyInfo;
+    cy.url().then(url => {
+      if (!url.includes('/home')) {
+        cy.visit('/home');
+        cy.wait(2000);
+      }
+    });
+    cy.get('[src="/rice.png"]', { timeout: 5000 }).should('be.visible');
+    cy.get('[data-test="create-party-btn"]').click();
+    cy.get('[data-test="location-text"]').should($input => {
+      expect($input).not.to.value('Move the map to update location');
+    });
+    cy.get('[data-test="create-party-location-btn"]').click();
+    cy.url().should('include', '/createparty');
 
-  cy.wait(2500);
-  cy.visit('/home');
-  cy.get('[data-test="create-party-btn"]').click();
-  cy.get('[data-test="location-text"]').should($input => {
-    expect($input).not.to.value('Move the map to update location');
+    cy.get('[data-test="party-name"]').type(partyName);
+    cy.get('[data-test="party-description"]').type(partyDescription);
+    cy.get('[data-test="budget"]').select(budget);
+    cy.get('[data-test="party-size"]').type('' + partySize);
+    cy.get('[data-test="create-party-btn"]').click();
+    cy.wait(2500);
+    cy.url().should('include', '/currentparty');
+  },
+);
+
+Cypress.Commands.add('joinParty', (id: string, clusterid: string) => {
+  cy.url().then(url => {
+    if (!url.includes('/home')) {
+      cy.visit('/home');
+      cy.wait(2000);
+    }
   });
-  cy.get('[data-test="create-party-location-btn"]').click();
-  cy.url().should('include', '/createparty');
+  cy.get(`[data-test="hiw-${id}-m-${clusterid}"]`).click({ force: true });
+  cy.get(`[data-test="hiw-${id}-m-${clusterid}"] > .absolute > img`).should(
+    'be.visible',
+  );
+  cy.get('[data-test="join-btn"]').click();
+});
 
-  cy.get('[data-test="party-name"]').type(partyName);
-  cy.get('[data-test="party-description"]').type(partyDescription);
-  cy.get('[data-test="budget"]').select(budget);
-  cy.get('[data-test="party-size"]').type(partySize);
-  cy.get('[data-test="create-party-btn"]').click();
-  cy.wait(3000);
-  cy.url().should('include', '/currentparty');
+Cypress.Commands.add('zoomIn', (times: number = 1) => {
+  for (let i = 0; i < times; i++) {
+    cy.get('[aria-label="Zoom in"]').click();
+  }
+});
+
+Cypress.Commands.add('zoomOut', (times: number = 1) => {
+  for (let i = 0; i < times; i++) {
+    cy.get('[aria-label="Zoom out"]').click();
+  }
 });

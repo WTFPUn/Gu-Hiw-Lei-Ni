@@ -13,8 +13,9 @@ export default defineConfig({
   e2e: {
     baseUrl: 'http://localhost:3000',
     viewportHeight: 896,
+    // viewportWidth: 896,
     viewportWidth: 414,
-
+    experimentalRunAllSpecs: true,
     setupNodeEvents(on, config) {
       const client = new MongoClient(process.env.MONGO_URL ?? '');
       const db = client.db('GuHiw');
@@ -22,9 +23,13 @@ export default defineConfig({
       // implement node event listeners here
       on('task', {
         async resetDatabase() {
-          await db.collection('User').deleteMany({});
-          await db.collection('Chat').deleteMany({});
-          await db.collection('Party').deleteMany({});
+          try {
+            await db.collection('User').deleteMany({});
+            await db.collection('Chat').deleteMany({});
+            await db.collection('Party').deleteMany({});
+          } catch (e: any) {
+            console.log(e);
+          }
 
           return null;
         },

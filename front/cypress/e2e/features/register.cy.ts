@@ -41,8 +41,6 @@ describe('registering user account', () => {
   it('should check if password and confirm password are not the same', () => {
     const user = users[0];
 
-    cy.log('randomly generated user', user);
-
     cy.get('[data-test="username"]').type(user.username);
     cy.get('[data-test="first-name"]').type(user.firstName);
     cy.get('[data-test="last-name"]').type(user.lastName);
@@ -59,8 +57,6 @@ describe('registering user account', () => {
 
   it('should check if password is too short (< 8 character)', () => {
     const user = users[0];
-
-    cy.log('randomly generated user', user);
 
     cy.get('[data-test="username"]').type(user.username);
     cy.get('[data-test="first-name"]').type(user.firstName);
@@ -79,8 +75,6 @@ describe('registering user account', () => {
   it('should be able to create new user', () => {
     const user = users[0];
 
-    cy.log('randomly generated user', user);
-
     cy.get('[data-test="username"]').type(user.username);
     cy.get('[data-test="first-name"]').type(user.firstName);
     cy.get('[data-test="last-name"]').type(user.lastName);
@@ -94,8 +88,6 @@ describe('registering user account', () => {
 
   it('should check if user is already registered', () => {
     const user = users[0];
-
-    cy.log('randomly generated user', user);
 
     cy.get('[data-test="username"]').type(user.username);
     cy.get('[data-test="first-name"]').type(user.firstName);

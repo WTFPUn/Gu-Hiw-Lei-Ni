@@ -120,7 +120,6 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
       lat: +lat,
       lng: +lng,
     });
-    console.log(distance);
     if (distance > 4) {
       return false;
     }
@@ -140,7 +139,6 @@ class CreateParty extends React.Component<CreatePartyProps, CreatePartyState> {
       } else if (!get_auth().auth_status) router.push('/login');
     }
 
-    console.log(router.query);
     return (
       <Layout type="party">
         <h1 className="text-3xl font-semibold pl-8 pt-24">Create Party</h1>

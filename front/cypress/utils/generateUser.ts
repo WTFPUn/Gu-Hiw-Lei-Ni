@@ -31,3 +31,7 @@ export const saveSeedUser = (numberOfUsers = 12, passwordLength = 8) => {
   );
   return users;
 };
+
+export const joinName = (user: { firstName: string; lastName: string }) => {
+  return user.firstName + ' ' + user.lastName;
+};

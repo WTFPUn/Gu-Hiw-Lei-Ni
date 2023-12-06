@@ -90,7 +90,6 @@ class Matchmaking extends React.Component<MatchmakingProps, MatchmakingState> {
       }
     }
 
-    console.log(router.query);
     return (
       <Layout type="party">
         {currentPartyInfo ? (
@@ -180,7 +179,7 @@ class Matchmaking extends React.Component<MatchmakingProps, MatchmakingState> {
                   text="Cancel Matchmaking"
                   danger
                   onClick={e => this.setState({ isInMatchmaking: false })}
-                  data-test="confirm-btn"
+                  data-test="cancel-btn"
                 />
               </div>
             </div>

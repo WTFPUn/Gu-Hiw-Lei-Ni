@@ -15,6 +15,15 @@ declare global {
       logout(): Chainable<null>;
       mockGeolocation(coords: number[]): Chainable<null>;
       cleanWebsocket(): Chainable<null>;
+      createParty(party: {
+        partyName: string;
+        partyDescription: string;
+        budget: string;
+        partySize: number;
+      }): Chainable<null>;
+      joinParty(id: string, clusterid: string): Chainable<null>;
+      zoomIn(times: number): Chainable<null>;
+      zoomOut(times: number): Chainable<null>;
     }
   }
 }

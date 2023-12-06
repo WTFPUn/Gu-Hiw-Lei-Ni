@@ -553,8 +553,6 @@ export default function PartySystemProvider({
     if (navigator?.geolocation) {
       navigator.geolocation.getCurrentPosition(
         position => {
-          // console.log(position.coords);
-
           setSystemState(state => {
             return {
               ...state,

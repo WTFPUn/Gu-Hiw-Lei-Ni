@@ -83,12 +83,9 @@ class EditProfile extends React.Component<EditProfileProps, EditProfileState> {
           localStorage.removeItem('token');
           this.props.router.push('/login');
         }
-        console.log(res);
       } catch (e: any) {
         alert(e.message);
       }
-
-      console.log(data);
     }
   }
 
