@@ -694,14 +694,15 @@ class Home extends React.Component<HomeProps, HomeState> {
                                 />
                                 {/* if not host, user can leave */}
                                 {currentPartyInfo?.host?.user_id !=
-                                  get_auth().user?.user_id && (
-                                  <Button
-                                    text="Leave"
-                                    danger
-                                    onClick={this.handle_leave_party}
-                                    data-test="leave-btn"
-                                  />
-                                )}
+                                  get_auth().user?.user_id &&
+                                  currentPartyInfo?.status == 'not_started' && (
+                                    <Button
+                                      text="Leave"
+                                      danger
+                                      onClick={this.handle_leave_party}
+                                      data-test="leave-btn"
+                                    />
+                                  )}
                               </>
                             )}
                           </div>

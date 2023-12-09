@@ -9,7 +9,11 @@ export default defineConfig({
     API_URL: process.env.NEXT_PUBLIC_API_URL,
     TEST_KEY: process.env.TEST_KEY ?? 'test',
   },
-  video: true,
+  reporter: 'cypress-mochawesome-reporter',
+  reporterOptions: {
+    inlineAssets: true,
+    embeddedScreenshots: true,
+  },
   e2e: {
     baseUrl: 'http://localhost:3000',
     viewportHeight: 896,
@@ -17,6 +21,7 @@ export default defineConfig({
     viewportWidth: 414,
     experimentalRunAllSpecs: true,
     setupNodeEvents(on, config) {
+      require('cypress-mochawesome-reporter/plugin')(on);
       const client = new MongoClient(process.env.MONGO_URL ?? '');
       const db = client.db('GuHiw');
       client.connect();
