@@ -262,16 +262,14 @@ class Home extends React.Component<HomeProps, HomeState> {
         <PartyItem
           key={index + 'hiwcluster' + clusterIndex}
           name={location.party_name}
-          distance={calculateDistance(
-            currentLocation ?? {
-              lat: location.lat,
-              lng: location.lng,
-            },
-            {
-              lat: location.lat,
-              lng: location.lng,
-            },
-          )}
+          distance={
+            (partySystem?.currentLocation
+              ? calculateDistance(partySystem?.currentLocation, {
+                  lat: currentPartyInfo?.lat as number,
+                  lng: currentPartyInfo?.lng as number,
+                }).toFixed(2)
+              : 0) as number
+          }
           onClick={() =>
             this.handle_click_marker(location.lat, location.lng, location.id)
           }
