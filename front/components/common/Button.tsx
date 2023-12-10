@@ -2,16 +2,17 @@ import React, { HTMLAttributes } from 'react';
 
 type ButtonProps = {
   text: string;
-  onClick: () => void;
+  onClick?: (e: React.MouseEvent<HTMLElement>) => void;
   primary?: boolean;
   danger?: boolean;
+  'data-test'?: string;
 };
 
 /**
  * Button component
  *
  * @param {string} text - Text to display on the button
- * @param {() => void} onClick - Function to call when the button is clicked
+ * @param {(e) => void} onClick - Function to call when the button is clicked
  * @param {string} fontSize - Font size of the button, unit in rem Ex. 1.5rem
  * @param {boolean} primary - Whether the button is primary or not
  * @param {boolean} danger - Whether the button is danger or not
@@ -22,17 +23,18 @@ class Button extends React.Component<ButtonProps, {}> {
     return (
       <button
         className={`
-      rounded-md px-4 py-3  
+      rounded-xl px-4 py-4 border-2   
       ${
         this.props.primary
-          ? 'bg-primary text-white'
+          ? ' bg-primary text-white border-primary'
           : this.props.danger
-          ? 'border-2 border-light-red text-light-red'
-          : 'border-2 border-secondary text-secondary'
+          ? ' border-redish text-redish'
+          : ' border-secondary text-secondary'
       } 
       text-sm font-normal 
       `}
         onClick={this.props.onClick}
+        data-test={this.props['data-test']}
       >
         {this.props.text}
       </button>

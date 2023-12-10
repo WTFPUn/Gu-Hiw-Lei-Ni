@@ -1,0 +1,62 @@
+[
+  {
+    "partyName": "Ramen Rumble",
+    "partyDescription": "Slurp down different ramen broths and toppings, vote for the champion, and enjoy a belly-warming battle.",
+    "budget": "medium",
+    "partySize": 3
+  },
+  {
+    "partyName": "Global Grub Crawl",
+    "partyDescription": "Set up stations with finger foods from various countries - a delicious journey around the world in bites.",
+    "budget": "low",
+    "partySize": 6
+  },
+  {
+    "partyName": "Sweet & Savory Showdown",
+    "partyDescription": "Divide into teams and bake both sweet and savory treats! Blind taste testing and friendly competition ensue.",
+    "budget": "medium",
+    "partySize": 8
+  },
+  {
+    "partyName": "Dumpling Extravaganza",
+    "partyDescription": "Wrap, fold, and steam your way to dumpling bliss! Experiment with fillings, sauces, and cooking methods.",
+    "budget": "low",
+    "partySize": 4
+  },
+  {
+    "partyName": "Breakfast for Dinner Bonanza",
+    "partyDescription": "Pancakes, waffles, eggs, bacon - it's all on the menu for this savory and sweet breakfast feast.",
+    "budget": "medium",
+    "partySize": 6
+  },
+  {
+    "partyName": "Spice Up Your Life Party",
+    "partyDescription": "Challenge your tastebuds with dishes from fiery cuisines around the world! Can you handle the heat?",
+    "budget": "high",
+    "partySize": 2
+  },
+  {
+    "partyName": "Potluck Pizza Party",
+    "partyDescription": "Everyone brings their favorite pizza toppings, unleash your creativity, and assemble a masterpiece of flavors.",
+    "budget": "low",
+    "partySize": 8
+  },
+  {
+    "partyName": "Taco Tuesday Throwdown",
+    "partyDescription": "Guacamole, salsa, carnitas, al pastor - build your dream tacos and battle it out for the title of Taco Master.",
+    "budget": "medium",
+    "partySize": 4
+  },
+  {
+    "partyName": "Sweets & Snacks Soiree",
+    "partyDescription": "Candy, cookies, dips, chips - indulge in a night of pure snacking bliss! Board games optional.",
+    "budget": "low",
+    "partySize": 3
+  },
+  {
+    "partyName": "Pasta Paradise",
+    "partyDescription": "From classic spaghetti to fancy gnocchi, whip up an array of pasta dishes and share a carb-loving celebration.",
+    "budget": "medium",
+    "partySize": 6
+  }
+]

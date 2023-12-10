@@ -6,10 +6,29 @@ services:
       context: .
       dockerfile: back/Dockerfile
     ports:
-      - "8000:8000"
+      - "8001:8000"
+    env_file:
+      - .env
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
   frontend:
     build:
       context: front
       dockerfile: Dockerfile
     ports:
       - "3001:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NEXT_PUBLIC_WS_API_URL=${NEXT_PUBLIC_WS_API_URL}
+      - NEXT_PUBLIC_GOOGLE_API_KEY=${NEXT_PUBLIC_GOOGLE_API_KEY}
+      - TEST_KEY=${TEST_KEY}
+      - PORT=${FRONT_PORT}
+      - HOST=${FRONT_HOST}
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

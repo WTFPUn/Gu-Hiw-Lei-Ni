@@ -32,15 +32,15 @@ echo "Checkout to $checkout"
         exit 1
     fi
 
-echo "--Check if .env.dev file exists"
+echo "--Check if .env file exists"
 
-if [ ! -f .env.dev ]
+if [ ! -f .env ]
 then
-    echo "File .env.dev does not exist."
-    echo "Creating .env.dev file using env.example file."
-    cp env.example .env.dev
+    echo "File .env does not exist."
+    echo "Creating .env file using env.example file."
+    cp env.example .env
 else
-    echo "File .env.dev found."
+    echo "File .env found."
 fi
 
 function build_image() {
@@ -72,7 +72,7 @@ fi
 
 echo "--Running the docker containers"
 
-docker compose --env-file ./.env.dev -f docker-compose.yml up -d
+docker compose --env-file ./.env -f docker-compose.yml up -d
 
 # check if docker compose successfully started
 if [ $? -eq 0 ]
@@ -80,5 +80,5 @@ then
     echo "Container successfully started."
 else
     echo "Docker compose failed to start."
-    docker compose --env-file ./.env.dev -f docker-compose.yml down
+    docker compose --env-file ./.env -f docker-compose.yml down
 fi
